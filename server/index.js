@@ -14,16 +14,28 @@
   const admin = require('firebase-admin');
 
   // Initialize Firebase Admin
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-  if (serviceAccountPath) {
-    const serviceAccount = require(path.isAbsolute(serviceAccountPath) ? serviceAccountPath : path.join(__dirname, serviceAccountPath));
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'vicas-hub.firebasestorage.app',
-    });
-    console.log('Firebase Admin initialized with Storage');
+  
+  if (serviceAccountJson || serviceAccountPath) {
+    let serviceAccount;
+    try {
+      if (serviceAccountJson) {
+        serviceAccount = JSON.parse(serviceAccountJson);
+      } else {
+        serviceAccount = require(path.isAbsolute(serviceAccountPath) ? serviceAccountPath : path.join(__dirname, serviceAccountPath));
+      }
+      
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'vicas-hub.firebasestorage.app',
+      });
+      console.log('Firebase Admin initialized with Storage');
+    } catch (err) {
+      console.error('Failed to initialize Firebase Admin:', err.message);
+    }
   } else {
-    console.warn('FIREBASE_SERVICE_ACCOUNT_PATH not set, Firebase Admin not initialized');
+    console.warn('Neither FIREBASE_SERVICE_ACCOUNT_JSON nor FIREBASE_SERVICE_ACCOUNT_PATH set. Firebase Admin not initialized.');
   }
 
   const PORT = process.env.PORT || 4000;
