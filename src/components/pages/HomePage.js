@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Box, Typography, Button, Container, Grid } from '@mui/material';
 import {
   ArrowForward as ArrowIcon,

@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
     } catch (e) { return null; }
   });
 
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
 
   // Sync user to localStorage
   useEffect(() => {

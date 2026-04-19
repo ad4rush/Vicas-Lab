@@ -95,7 +95,7 @@ const GlobalStyles = () => (
 );
 
 function GalleryUpload() {
-  const { isAdmin } = useAuth();
+  // const { isAdmin } = useAuth();
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [title, setTitle] = useState('');

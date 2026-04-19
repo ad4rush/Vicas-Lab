@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Container, Typography, Box, Grid, 
+  Container, Typography, Box, 
   Select, MenuItem, FormControl, InputLabel,
   useMediaQuery
 } from '@mui/material';
@@ -102,7 +102,7 @@ const ResearchPage = () => {
   const [year, setYear] = useState('');
   const [topic, setTopic] = useState('');
   const [author, setAuthor] = useState('');
-  const isMobile = useMediaQuery('(max-width:768px)');
+  // const isMobile = useMediaQuery('(max-width:768px)');
 
   const filteredPublications = publications.filter(p => 
     (year ? p.year === year : true) &&
@@ -178,7 +178,7 @@ const ResearchPage = () => {
                   <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
                     <p style={{ fontSize: '0.8rem', fontWeight: 700, color: C.sky, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{pub.author}</p>
                     <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: C.border }} />
-                    <p style={{ fontSize: '0.95rem', color: C. ink3, fontStyle: 'italic', margin: 0 }}>{pub.journal}</p>
+                    <p style={{ fontSize: '0.95rem', color: C.ink3, fontStyle: 'italic', margin: 0 }}>{pub.journal}</p>
                     <Box sx={{ ml: 'auto', bgcolor: C.bg, border: `1px solid ${C.border}`, px: 1.5, py: 0.5, borderRadius: '4px', fontSize: '11px', fontWeight: 700, color: C.navy, textTransform: 'uppercase' }}>{pub.topic}</Box>
                   </div>
                 </div>
