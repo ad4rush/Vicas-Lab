@@ -39,7 +39,7 @@
   }
 
   const PORT = process.env.PORT || 4000;
-  const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000,https://vicas-lab.vercel.app';
+  const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || '';
 
   // ensure data dir exists
   const dataDir = path.join(__dirname, 'data');
@@ -51,19 +51,24 @@
 
   app.use(helmet({ 
     crossOriginResourcePolicy: false,
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+    crossOriginOpenerPolicy: false
   }));
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use(cookieParser());
 
-  const allowedOrigins = FRONTEND_ORIGIN.split(',').map(o => o.trim());
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://vicas-lab.vercel.app',
+    ...FRONTEND_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
+  ];
 
   app.use(cors({
     origin: function(origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.warn(`CORS blocked origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
       }
     },
