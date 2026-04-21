@@ -10,7 +10,9 @@
   const authRoutes = require('./routes/auth');
   const galleryRoutes = require('./routes/gallery');
   const contentRoutes = require('./routes/content');
+  const btpRoutes = require('./routes/btp');
   const { initDb } = require('./db');
+  const { initCronJobs } = require('./cron');
   const admin = require('firebase-admin');
 
   // Initialize Firebase Admin
@@ -46,6 +48,7 @@
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
   initDb();
+  initCronJobs();
 
   const app = express();
 
@@ -87,6 +90,7 @@
   app.use('/api/auth', authLimiter, authRoutes);
   app.use('/api/gallery', galleryRoutes);
   app.use('/api/content', contentRoutes);
+  app.use('/api/btp', btpRoutes);
 
   app.get('/', (req, res) => res.json({ ok: true }));
 

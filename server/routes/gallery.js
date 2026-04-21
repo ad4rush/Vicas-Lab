@@ -16,7 +16,7 @@ router.post('/request-admin', authenticateToken, gc.requestAdminAccess);
 router.get('/pending', authenticateToken, requireRole('admin', 'super_admin'), gc.getPendingPhotos);
 router.post('/approve/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.approvePhoto);
 router.post('/reject/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.rejectPhoto);
-router.delete('/photos/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.deletePhoto);
+router.delete('/photos/:id', authenticateToken, gc.deletePhoto);
 router.put('/photos/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.updatePhoto);
 router.post('/albums', authenticateToken, requireRole('admin', 'super_admin'), gc.createAlbum);
 router.delete('/albums/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.deleteAlbum);

@@ -8,11 +8,12 @@ import {
   PhotoLibrary as AlbumIcon, ArrowBack as BackIcon,
   Close as CloseIcon, ArrowBack as PrevIcon, ArrowForward as NextIcon,
   Person as PersonIcon, CalendarToday as DateIcon,
-  Collections as CollectionsIcon
+  Collections as CollectionsIcon, Delete as DeleteIcon
 } from '@mui/icons-material';
 import main_4 from '../../Photos/main_4.jpeg';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000';
+import { useAuth } from '../../contexts/AuthContext';
 
 /* ─── DESIGN TOKENS (Navy Theme) ─────────────────────────────────── */
 const C = {
@@ -127,6 +128,7 @@ const GlobalStyles = () => (
 );
 
 function AlbumsPage() {
+  const { user, isSuperAdmin } = useAuth();
   const { albumId } = useParams();
   const navigate = useNavigate();
   const [albums, setAlbums] = useState([]);
@@ -200,6 +202,22 @@ function AlbumsPage() {
   };
 
   const currentPhoto = photos[lightbox.index];
+
+  async function handleDeletePhoto(id) {
+    if (!window.confirm('Delete this photo permanently?')) return;
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(`${API_BASE}/api/gallery/photos/${id}`, { 
+        method: 'DELETE', 
+        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include' 
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      closeLightbox();
+      fetchAlbumPhotos(albumId);
+    } catch (err) { setError(err.message); }
+  }
 
   // ─── Album List View ──────────────────────────────────────────
   if (!albumId) {
@@ -419,9 +437,16 @@ function AlbumsPage() {
             }}>
               {lightbox.index + 1} / {photos.length}
             </span>
-            <IconButton onClick={closeLightbox} className="lightbox-button" sx={{ width: 40, height: 40 }}>
-              <CloseIcon sx={{ fontSize: 20 }} />
-            </IconButton>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              { (isSuperAdmin || (user && currentPhoto && user.email === currentPhoto.uploader_email)) && (
+                <IconButton onClick={() => handleDeletePhoto(currentPhoto.id)} className="lightbox-button" sx={{ width: 40, height: 40, color: '#ef4444' }}>
+                  <DeleteIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )}
+              <IconButton onClick={closeLightbox} className="lightbox-button" sx={{ width: 40, height: 40 }}>
+                <CloseIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Box>
           </div>
 
           {/* Navigation */}

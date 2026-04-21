@@ -34,13 +34,11 @@ const C = {
 const navItemsMain = [
   { text: 'About', path: '/about' },
   { text: 'Research', path: '/research' },
-  { text: 'Gallery', path: '/gallery' },
-];
-
-const navItemsMore = [
   { text: 'Projects', path: '/projects' },
-  { text: 'News & Achievements', path: '/news' },
+  { text: 'News', path: '/news' },
+  { text: 'Gallery', path: '/gallery' },
   { text: 'Albums', path: '/albums' },
+  { text: 'BTP Portal', path: '/btp' },
 ];
 
 const Header = () => {
@@ -172,34 +170,6 @@ const Header = () => {
                 {item.text}
               </Button>
             ))}
-
-            <Button
-              className="header-nav-link"
-              onClick={handleOpenMore}
-              endIcon={<ExpandIcon sx={{ fontSize: '1.2rem', ml: -0.5 }} />}
-              style={{ color: (scrolled || !isHome) ? C.ink : 'rgba(255,255,255,0.9)' }}
-            >
-              More
-            </Button>
-            <Menu
-              anchorEl={anchorMore}
-              open={Boolean(anchorMore)}
-              onClose={handleCloseMore}
-              className="dropdown-menu"
-              disableScrollLock
-            >
-              {navItemsMore.map((item) => (
-                <MenuItem 
-                  key={item.text} 
-                  component={Link} 
-                  to={item.path} 
-                  onClick={handleCloseMore}
-                  className="dropdown-item"
-                >
-                  {item.text}
-                </MenuItem>
-              ))}
-            </Menu>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 3 } }}>
@@ -223,6 +193,24 @@ const Header = () => {
               </Button>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button 
+                  component={Link}
+                  to="/submit"
+                  sx={{ 
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    color: C.white,
+                    background: C.sky,
+                    px: 3, py: 1,
+                    borderRadius: '4px',
+                    display: { xs: 'none', md: 'flex' },
+                    '&:hover': {
+                      background: '#0096B4'
+                    }
+                  }}
+                >
+                  Submit Content
+                </Button>
                 <Tooltip title={user.name}>
                   <IconButton onClick={handleOpenUser} sx={{ p: 0.5, border: `1px solid ${C.border}` }}>
                     <Avatar 
@@ -259,9 +247,6 @@ const Header = () => {
                   )}
                   <MenuItem component={Link} to="/upload" onClick={handleCloseUser} className="dropdown-item">
                     <UploadIcon sx={{ fontSize: 18, mr: 1.5 }} /> Upload Photo
-                  </MenuItem>
-                  <MenuItem component={Link} to="/submit" onClick={handleCloseUser} className="dropdown-item">
-                    <SendIcon sx={{ fontSize: 18, mr: 1.5 }} /> Submit Content
                   </MenuItem>
                   {role === 'user' && (
                     <MenuItem onClick={handleRequestAdmin} className="dropdown-item">
@@ -315,7 +300,7 @@ const Header = () => {
         }}
       >
         <List sx={{ px: 3 }}>
-          {[...navItemsMain, ...navItemsMore].map((item) => (
+          {navItemsMain.map((item) => (
             <ListItem key={item.text} disablePadding>
               <ListItemButton component={Link} to={item.path} onClick={handleDrawerToggle} sx={{ py: 1.5 }}>
                 <ListItemText primary={item.text} primaryTypographyProps={{ fontWeight: 600, color: C.navy }} />

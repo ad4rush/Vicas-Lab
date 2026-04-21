@@ -17,6 +17,7 @@ import AdminPanel from './components/pages/AdminPanel';
 import GalleryUpload from './components/pages/GalleryUpload';
 import ContentUpload from './components/pages/ContentUpload';
 import AlbumsPage from './components/pages/AlbumsPage';
+import BTPPortal from './components/pages/BTPPortal';
 
 function App() {
   return (
@@ -48,6 +49,11 @@ function App() {
               <Route path="/admin" element={
                 <ProtectedRoute roles={['admin', 'super_admin']}>
                   <AdminPanel />
+                </ProtectedRoute>
+              } />
+              <Route path="/btp" element={
+                <ProtectedRoute>
+                  <BTPPortal />
                 </ProtectedRoute>
               } />
             </Routes>

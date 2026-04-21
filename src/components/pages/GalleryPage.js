@@ -6,11 +6,12 @@ import {
 import {
   Close as CloseIcon, ArrowBack as PrevIcon, ArrowForward as NextIcon,
   CalendarToday as DateIcon, Person as PersonIcon,
-  GridView as GridIcon, ViewColumn as MasonryIcon
+  GridView as GridIcon, ViewColumn as MasonryIcon, Delete as DeleteIcon
 } from '@mui/icons-material';
 import main_4 from '../../Photos/main_4.jpeg';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000';
+import { useAuth } from '../../contexts/AuthContext';
 
 /* ─── DESIGN TOKENS (Navy Theme) ─────────────────────────────────── */
 const C = {
@@ -128,6 +129,7 @@ const GlobalStyles = () => (
 );
 
 const GalleryPage = () => {
+  const { user, isSuperAdmin } = useAuth();
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -211,6 +213,22 @@ const GalleryPage = () => {
   };
 
   const currentPhoto = photos[lightbox.index];
+
+  async function handleDeletePhoto(id) {
+    if (!window.confirm('Delete this photo permanently?')) return;
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(`${API_BASE}/api/gallery/photos/${id}`, { 
+        method: 'DELETE', 
+        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include' 
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      closeLightbox();
+      fetchPhotos();
+    } catch (err) { setError(err.message); }
+  }
 
   return (
     <div style={{ fontFamily: sysFont, background: C.white, color: C.ink, overflowX: 'hidden', minHeight: '100vh' }}>
@@ -332,9 +350,16 @@ const GalleryPage = () => {
             <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', fontWeight: 600 }}>
               {lightbox.index + 1} of {photos.length}
             </span>
-            <IconButton onClick={closeLightbox} className="lb-nav-btn" sx={{ width: 40, height: 40 }}>
-              <CloseIcon sx={{ fontSize: 20 }} />
-            </IconButton>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              { (isSuperAdmin || (user && currentPhoto && user.email === currentPhoto.uploader_email)) && (
+                <IconButton onClick={() => handleDeletePhoto(currentPhoto.id)} className="lb-nav-btn" sx={{ width: 40, height: 40, color: '#ef4444' }}>
+                  <DeleteIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )}
+              <IconButton onClick={closeLightbox} className="lb-nav-btn" sx={{ width: 40, height: 40 }}>
+                <CloseIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Box>
           </div>
 
           {/* Navigation Arrows */}

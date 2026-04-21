@@ -172,6 +172,10 @@ async function deleteContent(req, res) {
     const item = await db.get('SELECT * FROM content_items WHERE id = ?', id);
     if (!item) return res.status(404).json({ error: 'Item not found' });
 
+    if (req.user.role !== 'super_admin' && req.user.role !== 'admin' && req.user.sub !== item.uploaded_by) {
+      return res.status(403).json({ error: 'Unauthorized to delete this item' });
+    }
+
     if (item.storage_path) await deleteLocalFile(item.storage_path);
     try {
       const m = JSON.parse(item.metadata || '{}');

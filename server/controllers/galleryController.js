@@ -155,6 +155,10 @@ async function deletePhoto(req, res) {
     const photo = await db.get('SELECT * FROM photos WHERE id = ?', id);
     if (!photo) return res.status(404).json({ error: 'Photo not found' });
 
+    if (req.user.role !== 'super_admin' && req.user.role !== 'admin' && req.user.sub !== photo.uploaded_by) {
+      return res.status(403).json({ error: 'Unauthorized to delete this photo' });
+    }
+
     await deleteLocalFile(photo.storage_path);
 
     await db.run('DELETE FROM album_photos WHERE photo_id = ?', id);

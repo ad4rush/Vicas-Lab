@@ -21,7 +21,7 @@ router.post('/upload', authenticateToken, uploadLimiter, cc.uploadContent);
 router.get('/pending/all', authenticateToken, requireRole('admin', 'super_admin'), cc.getPendingContent);
 router.post('/approve/:id', authenticateToken, requireRole('admin', 'super_admin'), cc.approveContent);
 router.post('/reject/:id', authenticateToken, requireRole('admin', 'super_admin'), cc.rejectContent);
-router.delete('/:id', authenticateToken, requireRole('admin', 'super_admin'), cc.deleteContent);
+router.delete('/:id', authenticateToken, cc.deleteContent);
 router.put('/:id', authenticateToken, requireRole('admin', 'super_admin'), cc.updateContent);
 
 module.exports = router;

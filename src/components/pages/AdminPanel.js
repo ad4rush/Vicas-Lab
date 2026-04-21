@@ -624,6 +624,22 @@ function AdminPanel() {
                                   <RoleIcon fontSize="small" sx={{ color: C.sky }} />
                                 </IconButton>
                               </Tooltip>
+                              {u.role === 'admin' && (
+                                <Tooltip title="Revoke Admin Access">
+                                  <IconButton
+                                    size="small"
+                                    className="vicas-action-btn"
+                                    onClick={() => handleUpdateRole(u.id, 'user')}
+                                    sx={{
+                                      bgcolor: 'rgba(217, 119, 6, 0.08)',
+                                      border: `1px solid rgba(217, 119, 6, 0.15)`,
+                                      '&:hover': { bgcolor: C.warningBg, borderColor: C.warning },
+                                    }}
+                                  >
+                                    <DemoteIcon fontSize="small" sx={{ color: C.warning }} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
                               <Tooltip title="Delete Personnel">
                                 <IconButton
                                   size="small"

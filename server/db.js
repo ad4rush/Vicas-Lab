@@ -107,6 +107,36 @@ async function initDb() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (uploaded_by) REFERENCES users(id)
     );
+
+    CREATE TABLE IF NOT EXISTS btp_projects (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      owner_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (owner_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS btp_members (
+      project_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (project_id, user_id),
+      FOREIGN KEY (project_id) REFERENCES btp_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS btp_reports (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      week_number INTEGER NOT NULL,
+      report_text TEXT,
+      report_file_url TEXT,
+      is_public BOOLEAN DEFAULT 0,
+      uploaded_by TEXT NOT NULL,
+      uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES btp_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (uploaded_by) REFERENCES users(id)
+    );
   `);
 
   // Migrate old role names to new ones

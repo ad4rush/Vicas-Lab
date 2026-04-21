@@ -183,14 +183,14 @@ function ContentUpload() {
 
             {type === 'news' && (
               <>
-                <TextField fullWidth label="Date (e.g., Oct 26, 2023)" value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                <TextField fullWidth type="date" label="Date" InputLabelProps={{ shrink: true }} value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Category Tag (e.g., Award, Funding, Paper)" value={metadata.tag || ''} onChange={(e) => handleMetadataChange('tag', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
               </>
             )}
 
             {type === 'achievement' && (
               <>
-                <TextField fullWidth label="Date" value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                <TextField fullWidth type="date" label="Date" InputLabelProps={{ shrink: true }} value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Awarded To / Recipient" value={metadata.awardedTo || ''} onChange={(e) => handleMetadataChange('awardedTo', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Awarding Body / Conference" value={metadata.awardedBy || ''} onChange={(e) => handleMetadataChange('awardedBy', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
               </>
