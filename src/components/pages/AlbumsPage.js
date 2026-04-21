@@ -11,9 +11,9 @@ import {
   Collections as CollectionsIcon, Delete as DeleteIcon
 } from '@mui/icons-material';
 import main_4 from '../../Photos/main_4.jpeg';
+import { useAuth } from '../../contexts/AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000';
-import { useAuth } from '../../contexts/AuthContext';
 
 /* ─── DESIGN TOKENS (Navy Theme) ─────────────────────────────────── */
 const C = {
