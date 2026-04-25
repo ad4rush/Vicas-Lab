@@ -178,7 +178,7 @@ export default function BTPPortal() {
   return (
     <div style={{ fontFamily: sysFont, background: C.bg, minHeight: '100vh', paddingBottom: '60px' }}>
       {/* Hero */}
-      <section style={{ position: 'relative', height: '30vh', minHeight: '250px', display: 'flex', alignItems: 'center', paddingTop: '80px' }}>
+      <section style={{ position: 'relative', height: '45vh', minHeight: '350px', display: 'flex', alignItems: 'center', paddingTop: '80px' }}>
         <div style={{ position: 'absolute', inset: 0, zIndex: 0, backgroundImage: `url(${main_2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundColor: 'rgba(10, 37, 64, 0.9)' }} />
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px', background: C.sky, zIndex: 3 }} />
@@ -188,7 +188,7 @@ export default function BTPPortal() {
         </div>
       </section>
 
-      <Container maxWidth="xl" sx={{ mt: -4, position: 'relative', zIndex: 10 }}>
+      <Container maxWidth="xl" sx={{ mt: 4, position: 'relative', zIndex: 10 }}>
         {error && <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>{error}</Alert>}
 
         <Grid container spacing={4}>
@@ -279,7 +279,7 @@ export default function BTPPortal() {
 
                 <Grid container>
                   {/* Weeks Sidebar */}
-                  <Grid item xs={12} sm={3} sx={{ borderRight: `1px solid ${C.border}`, bgcolor: C.bg, maxHeight: '600px', overflowY: 'auto' }}>
+                  <Grid item xs={12} sm={2} sx={{ borderRight: `1px solid ${C.border}`, bgcolor: C.bg, maxHeight: '600px', overflowY: 'auto' }}>
                     <List sx={{ p: 2 }}>
                       {weeks.map(w => {
                         const hasReport = projectData.reports.some(r => r.week_number === w);
@@ -310,7 +310,7 @@ export default function BTPPortal() {
                   </Grid>
 
                   {/* Week Content */}
-                  <Grid item xs={12} sm={9} sx={{ p: 4, bgcolor: C.white, minHeight: '500px' }}>
+                  <Grid item xs={12} sm={10} sx={{ p: 4, bgcolor: C.white, minHeight: '500px' }}>
                     {activeWeek ? (
                       <Box>
                         <Typography sx={{ fontSize: '1.4rem', fontWeight: 800, color: C.navy, mb: 3 }}>
