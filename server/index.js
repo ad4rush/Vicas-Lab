@@ -51,6 +51,7 @@
   initCronJobs();
 
   const app = express();
+  app.set('trust proxy', 1); // Trust Nginx reverse proxy (for rate-limiter + correct client IP)
 
   app.use(helmet({ 
     crossOriginResourcePolicy: false,
