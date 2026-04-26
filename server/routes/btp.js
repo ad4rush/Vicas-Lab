@@ -10,5 +10,6 @@ router.post('/accept-invite', authenticateToken, btp.acceptInvite);
 router.post('/:id/members', authenticateToken, btp.addMember);
 router.post('/:id/reports', authenticateToken, btp.uploadReport);
 router.get('/:id', authenticateToken, btp.getProjectReports);
+router.put('/:id/privacy', authenticateToken, btp.toggleProjectPrivacy);
 
 module.exports = router;

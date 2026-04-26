@@ -60,7 +60,6 @@ export default function BTPPortal() {
 
   const [reportText, setReportText] = useState('');
   const [reportFile, setReportFile] = useState(null);
-  const [isPublic, setIsPublic] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -157,7 +156,6 @@ export default function BTPPortal() {
         body: JSON.stringify({
           weekNumber: activeWeek,
           reportText,
-          isPublic: isPublic,
           fileName: reportFile?.name,
           fileData: reportFile?.data
         })
@@ -171,6 +169,21 @@ export default function BTPPortal() {
       setError(err.message);
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleTogglePrivacy(checked) {
+    try {
+      const res = await fetch(`${API_BASE}/api/btp/${selectedProject.id}/privacy`, {
+        method: 'PUT', headers,
+        body: JSON.stringify({ is_public: checked })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSelectedProject(prev => ({ ...prev, is_public: checked ? 1 : 0 }));
+      fetchProjects(); // update sidebar as well
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -255,14 +268,22 @@ export default function BTPPortal() {
                       <Typography sx={{ fontSize: '1.8rem', fontWeight: 800, color: C.navy }}>{selectedProject.title}</Typography>
                       <Typography sx={{ color: C.ink3, fontSize: '0.9rem', mt: 0.5 }}>Owner: {selectedProject.owner_name}</Typography>
                     </div>
-                    <Button 
-                      variant="outlined" size="small" 
-                      startIcon={<MemberIcon />}
-                      onClick={() => setMemberDialog(true)}
-                      sx={{ borderRadius: '8px', borderColor: C.border, color: C.navy, fontWeight: 700 }}
-                    >
-                      Add Member
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                      {(selectedProject.owner_id === user?.id || user?.role === 'super_admin') && (
+                        <FormControlLabel
+                          control={<Switch checked={selectedProject.is_public === 1} onChange={(e) => handleTogglePrivacy(e.target.checked)} color="primary" />}
+                          label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: C.ink2 }}>Public Project</Typography>}
+                        />
+                      )}
+                      <Button 
+                        variant="outlined" size="small" 
+                        startIcon={<MemberIcon />}
+                        onClick={() => setMemberDialog(true)}
+                        sx={{ borderRadius: '8px', borderColor: C.border, color: C.navy, fontWeight: 700 }}
+                      >
+                        Add Member
+                      </Button>
+                    </Box>
                   </Box>
                   {/* Members List */}
                   <Box sx={{ mt: 3, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -278,40 +299,41 @@ export default function BTPPortal() {
                   </Box>
                 </Box>
 
-                <Grid container>
-                  {/* Weeks Sidebar */}
-                  <Grid item xs={12} md={3} sx={{ borderRight: `1px solid ${C.border}`, bgcolor: C.bg, maxHeight: '600px', overflowY: 'auto' }}>
-                    <List sx={{ p: 2 }}>
+                <Box>
+                  {/* Horizontal Weeks Selector */}
+                  <Box sx={{ borderBottom: `1px solid ${C.border}`, bgcolor: C.bg, overflowX: 'auto' }}>
+                    <Box sx={{ display: 'flex', p: 2, minWidth: 'max-content' }}>
                       {weeks.map(w => {
                         const hasReport = projectData.reports.some(r => r.week_number === w);
                         const isActive = activeWeek === w;
                         return (
-                          <ListItem 
-                            key={w} button 
+                          <Box 
+                            key={w} 
                             onClick={() => setActiveWeek(w)}
                             sx={{
-                              borderRadius: '8px', mb: 0.5,
+                              display: 'flex', alignItems: 'center', gap: 1,
+                              borderRadius: '8px', mr: 1, px: 2, py: 1,
                               bgcolor: isActive ? C.white : 'transparent',
                               border: `1px solid ${isActive ? C.border : 'transparent'}`,
                               boxShadow: isActive ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                              cursor: 'pointer',
                               '&:hover': { bgcolor: isActive ? C.white : 'rgba(0,0,0,0.02)' }
                             }}
                           >
-                            <ListItemIcon sx={{ minWidth: 32, color: hasReport ? C.success : C.ink3 }}>
+                            <Box sx={{ color: hasReport ? C.success : C.ink3, display: 'flex' }}>
                               {hasReport ? <SuccessIcon fontSize="small" /> : <WeekIcon fontSize="small" />}
-                            </ListItemIcon>
-                            <ListItemText 
-                              primary={`Week ${w}`} 
-                              primaryTypographyProps={{ fontWeight: isActive ? 800 : 600, color: isActive ? C.navy : C.ink2, fontSize: '0.9rem' }} 
-                            />
-                          </ListItem>
+                            </Box>
+                            <Typography sx={{ fontWeight: isActive ? 800 : 600, color: isActive ? C.navy : C.ink2, fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                              Week {w}
+                            </Typography>
+                          </Box>
                         );
                       })}
-                    </List>
-                  </Grid>
+                    </Box>
+                  </Box>
 
                   {/* Week Content */}
-                  <Grid item xs={12} md={9} sx={{ p: 4, bgcolor: C.white, minHeight: '500px' }}>
+                  <Box sx={{ p: 4, bgcolor: C.white, minHeight: '500px' }}>
                     {activeWeek ? (
                       <Box>
                         <Typography sx={{ fontSize: '1.4rem', fontWeight: 800, color: C.navy, mb: 3 }}>
@@ -379,33 +401,29 @@ export default function BTPPortal() {
                                         </Typography>
                                       )}
                                     </Box>
-                                    <FormControlLabel
-                                      control={<Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} color="primary" />}
-                                      label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: C.ink2 }}>Make Public</Typography>}
-                                    />
+                                    </Box>
+                                    <Button
+                                      variant="contained"
+                                      onClick={handleSubmitReport}
+                                      disabled={uploading || (!reportText && !reportFile)}
+                                      fullWidth
+                                      sx={{ bgcolor: C.navy, borderRadius: '8px', fontWeight: 700, py: 1.5, '&:hover': { bgcolor: C.navyDark } }}
+                                    >
+                                      {uploading ? 'Submitting...' : 'Submit Weekly Report'}
+                                    </Button>
                                   </Box>
-                                  <Button
-                                    variant="contained"
-                                    onClick={handleSubmitReport}
-                                    disabled={uploading || (!reportText && !reportFile)}
-                                    fullWidth
-                                    sx={{ bgcolor: C.navy, borderRadius: '8px', fontWeight: 700, py: 1.5, '&:hover': { bgcolor: C.navyDark } }}
-                                  >
-                                    {uploading ? 'Submitting...' : 'Submit Weekly Report'}
-                                  </Button>
-                                </Box>
-                              )}
-                            </Box>
-                          );
-                        })()}
-                      </Box>
-                    ) : (
-                      <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                        <Typography sx={{ color: C.ink3, fontWeight: 600 }}>Select a week to view or submit progress.</Typography>
-                      </Box>
-                    )}
-                  </Grid>
-                </Grid>
+                                )}
+                              </Box>
+                            );
+                          })()}
+                        </Box>
+                      ) : (
+                        <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                          <Typography sx={{ color: C.ink3, fontWeight: 600 }}>Select a week to view or submit progress.</Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
               </Paper>
             )}
           </Grid>

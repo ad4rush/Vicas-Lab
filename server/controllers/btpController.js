@@ -116,8 +116,13 @@ async function addMember(req, res) {
         text: `Hello,\n\n${inviter.name} is sending you a request to join the BTP project "${project.title}".\n\nPlease join by clicking this link:\n${inviteUrl}\n\nBest,\nVICAS Lab`
       };
       
-      await transporter.sendMail(mailOptions);
-      return res.json({ ok: true, message: 'Invite sent to unregistered user.' });
+      try {
+        await transporter.sendMail(mailOptions);
+        return res.json({ ok: true, message: 'Invite sent to unregistered user.' });
+      } catch (mailErr) {
+        console.error('Failed to send invite email:', mailErr);
+        return res.json({ ok: true, message: 'User invited, but the email failed to send. They can join via the invite link manually if needed.' });
+      }
     }
 
     const existing = await db.get('SELECT * FROM btp_members WHERE project_id = ? AND user_id = ?', id, targetUser.id);
@@ -250,11 +255,34 @@ async function getProjectReports(req, res) {
   }
 }
 
+async function toggleProjectPrivacy(req, res) {
+  const { id } = req.params;
+  const { is_public } = req.body;
+  const db = await getDb();
+  try {
+    const project = await db.get('SELECT owner_id FROM btp_projects WHERE id = ?', id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    if (project.owner_id !== req.user.sub && req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Only the project owner or a superadmin can toggle privacy' });
+    }
+
+    await db.run('UPDATE btp_projects SET is_public = ? WHERE id = ?', is_public ? 1 : 0, id);
+    res.json({ ok: true, message: 'Project privacy updated' });
+  } catch (err) {
+    console.error('Toggle project privacy error:', err);
+    res.status(500).json({ error: 'Failed to update project privacy' });
+  } finally {
+    await db.close();
+  }
+}
+
 module.exports = {
   createProject,
   getMyProjects,
   addMember,
   acceptInvite,
   uploadReport,
-  getProjectReports
+  getProjectReports,
+  toggleProjectPrivacy
 };

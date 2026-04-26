@@ -278,6 +278,23 @@ function AlbumsPage() {
     }
   }
 
+  async function handleSetCover(photoId) {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(`${API_BASE}/api/gallery/albums/${albumId}/cover`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cover_photo_id: photoId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      alert('Cover updated successfully!');
+      fetchAlbumPhotos(albumId);
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
   // ─── Album List View ──────────────────────────────────────────
   if (!albumId) {
     return (
@@ -424,7 +441,7 @@ function AlbumsPage() {
             {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
           </p>
 
-          {(isSuperAdmin || (user && user.role === 'admin')) && (
+          {isSuperAdmin && (
             <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
               <Button 
                 variant="outlined" size="small" startIcon={<EditIcon />}
@@ -520,6 +537,16 @@ function AlbumsPage() {
               {lightbox.index + 1} / {photos.length}
             </span>
             <Box sx={{ display: 'flex', gap: 1 }}>
+              {isSuperAdmin && (
+                <Button 
+                  onClick={() => handleSetCover(currentPhoto.id)} 
+                  variant="outlined" 
+                  size="small"
+                  sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)', mr: 2 }}
+                >
+                  Set as Cover
+                </Button>
+              )}
               { (isSuperAdmin || (user && currentPhoto && user.email === currentPhoto.uploader_email)) && (
                 <IconButton onClick={() => handleDeletePhoto(currentPhoto.id)} className="lightbox-button" sx={{ width: 40, height: 40, color: '#ef4444' }}>
                   <DeleteIcon sx={{ fontSize: 20 }} />

@@ -91,6 +91,11 @@ const GlobalStyles = () => (
       display: flex;
       align-items: center;
       gap: 16px;
+      position: sticky;
+      top: 60px; /* Assuming navbar height */
+      z-index: 10;
+      background: ${C.white};
+      margin-top: -16px;
     }
     .gallery-date-header h3 {
       font-size: 1.4rem;

@@ -112,6 +112,7 @@ async function initDb() {
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
       owner_id TEXT NOT NULL,
+      is_public BOOLEAN DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (owner_id) REFERENCES users(id)
     );
@@ -154,6 +155,11 @@ async function initDb() {
     await db.run("UPDATE users SET role = 'admin' WHERE role = 'super_user'");
     await db.run("UPDATE users SET role = 'super_admin' WHERE role = 'super_super_user'");
   } catch (err) { /* ignore */ }
+
+  // Add missing columns if they don't exist
+  try {
+    await db.run("ALTER TABLE btp_projects ADD COLUMN is_public BOOLEAN DEFAULT 0");
+  } catch (err) { /* ignore if exists */ }
 
   // Ensure super admin emails always have super_admin role
   for (const email of SUPER_ADMIN_EMAILS) {

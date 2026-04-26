@@ -86,8 +86,14 @@ const NewsPage = () => {
         if (newsRes.ok && newsData.items) combined = [...combined, ...newsData.items];
         if (achRes.ok && achData.items) combined = [...combined, ...achData.items];
 
-        // Sort by created_at desc
-        combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        // Sort by metadata.date desc
+        combined.sort((a, b) => {
+          const aMeta = a.metadata ? JSON.parse(a.metadata) : {};
+          const bMeta = b.metadata ? JSON.parse(b.metadata) : {};
+          const aDate = new Date(aMeta.date || a.created_at);
+          const bDate = new Date(bMeta.date || b.created_at);
+          return bDate - aDate;
+        });
         setNewsItems(combined);
       } catch (err) {
         console.error("Failed to fetch news and achievements", err);
@@ -97,6 +103,21 @@ const NewsPage = () => {
     };
     fetchNewsAndAchievements();
   }, []);
+
+  const groupedNews = React.useMemo(() => {
+    const groups = {};
+    newsItems.forEach(item => {
+      const meta = item.metadata ? JSON.parse(item.metadata) : {};
+      const d = new Date(meta.date || item.created_at);
+      if (isNaN(d.getTime())) return;
+
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      if (!groups[key]) groups[key] = { key, label, items: [] };
+      groups[key].items.push(item);
+    });
+    return Object.values(groups).sort((a, b) => b.key.localeCompare(a.key));
+  }, [newsItems]);
 
   return (
     <div style={{ fontFamily: sysFont, background: C.white, color: C.ink, overflowX: 'hidden', minHeight: '100vh' }}>
@@ -127,11 +148,16 @@ const NewsPage = () => {
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                 <CircularProgress sx={{ color: C.navy }} />
               </Box>
-            ) : newsItems.length === 0 ? (
+            ) : groupedNews.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
                 <Typography sx={{ color: C.ink3, fontWeight: 600 }}>No recent news updates.</Typography>
               </Box>
-            ) : newsItems.map((item, index) => {
+            ) : groupedNews.map(group => (
+              <div key={group.key}>
+                <div style={{ position: 'sticky', top: '60px', zIndex: 10, background: C.white, padding: '16px 0', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', marginTop: '-1px' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: C.navy, margin: 0 }}>{group.label}</h3>
+                </div>
+                {group.items.map((item, index) => {
               const meta = item.metadata ? JSON.parse(item.metadata) : {};
               return (
                 <div key={item.id || index} className="vicas-news-item">
@@ -193,6 +219,8 @@ const NewsPage = () => {
                 </div>
               );
             })}
+            </div>
+          ))}
           </div>
         </Container>
       </section>

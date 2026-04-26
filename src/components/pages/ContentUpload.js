@@ -100,22 +100,30 @@ function ContentUpload() {
       };
 
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${API_BASE}/api/content/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type, title, description,
-          fileData, fileName,
-          pdfData, pdfName,
-          metadata: enrichedMetadata
-        })
-      });
+      
+      let res;
+      if (type === 'gallery') {
+        if (!fileData) throw new Error('An image file is required for Gallery Photo.');
+        res = await fetch(`${API_BASE}/api/gallery/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName, fileData, title, description })
+        });
+      } else {
+        res = await fetch(`${API_BASE}/api/content/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type, title, description,
+            fileData, fileName,
+            pdfData, pdfName,
+            metadata: enrichedMetadata
+          })
+        });
+      }
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to upload content');
+      if (!res.ok) throw new Error(data.error || 'Failed to upload');
 
       setStatus({ error: null, success: data.message, loading: false });
       resetForm();
@@ -162,6 +170,7 @@ function ContentUpload() {
                 <MenuItem value="research">🔬 Research / Publication</MenuItem>
                 <MenuItem value="news">📰 News / Update</MenuItem>
                 <MenuItem value="achievement">🏆 Achievement</MenuItem>
+                <MenuItem value="gallery">🖼️ Gallery Photo</MenuItem>
               </Select>
             </FormControl>
 
@@ -214,15 +223,17 @@ function ContentUpload() {
             <Typography sx={{ color: C.ink3, fontSize: '0.85rem', mb: 3 }}>All fields below are optional — attach whatever is relevant.</Typography>
 
             {/* External Link */}
-            <TextField
-              fullWidth
-              label="External Link (paper URL, project page, etc.)"
-              placeholder="https://arxiv.org/abs/..."
-              value={externalLink}
-              onChange={(e) => setExternalLink(e.target.value)}
-              InputProps={{ startAdornment: <LinkIcon sx={{ mr: 1, color: C.ink3, fontSize: 20 }} /> }}
-              sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-            />
+            {type !== 'gallery' && (
+              <TextField
+                fullWidth
+                label="External Link (paper URL, project page, etc.)"
+                placeholder="https://arxiv.org/abs/..."
+                value={externalLink}
+                onChange={(e) => setExternalLink(e.target.value)}
+                InputProps={{ startAdornment: <LinkIcon sx={{ mr: 1, color: C.ink3, fontSize: 20 }} /> }}
+                sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+              />
+            )}
 
             {/* Image Upload */}
             <Box sx={{ mb: 3, border: `2px dashed ${imageFile ? C.sky : C.border}`, p: 3, textAlign: 'center', borderRadius: '12px', bgcolor: imageFile ? C.skyLight : C.bg, transition: 'all 0.2s' }}>
@@ -230,7 +241,7 @@ function ContentUpload() {
               <label htmlFor="content-image">
                 <Button component="span" startIcon={<ImageIcon />} variant="outlined"
                   sx={{ mb: 1, color: C.navy, borderColor: imageFile ? C.sky : C.border, borderRadius: '8px', '&:hover': { borderColor: C.sky, bgcolor: C.skyLight } }}>
-                  {imageFile ? 'Change Image' : 'Select Image (Optional)'}
+                  {imageFile ? 'Change Image' : (type === 'gallery' ? 'Select Image *' : 'Select Image (Optional)')}
                 </Button>
               </label>
               {imageFile && <Typography sx={{ fontSize: '0.85rem', color: C.sky, fontWeight: 600 }}>📷 {imageFile.name}</Typography>}
@@ -238,17 +249,19 @@ function ContentUpload() {
             </Box>
 
             {/* PDF Upload */}
-            <Box sx={{ mb: 5, border: `2px dashed ${pdfFile ? C.sky : C.border}`, p: 3, textAlign: 'center', borderRadius: '12px', bgcolor: pdfFile ? C.skyLight : C.bg, transition: 'all 0.2s' }}>
-              <input type="file" id="content-pdf" accept=".pdf" style={{ display: 'none' }} onChange={handlePdfChange} />
-              <label htmlFor="content-pdf">
-                <Button component="span" startIcon={<PdfIcon />} variant="outlined"
-                  sx={{ mb: 1, color: C.navy, borderColor: pdfFile ? C.sky : C.border, borderRadius: '8px', '&:hover': { borderColor: C.sky, bgcolor: C.skyLight } }}>
-                  {pdfFile ? 'Change PDF' : 'Upload Research Paper PDF (Optional)'}
-                </Button>
-              </label>
-              {pdfFile && <Typography sx={{ fontSize: '0.85rem', color: C.sky, fontWeight: 600 }}>📄 {pdfFile.name}</Typography>}
-              <Typography sx={{ fontSize: '0.72rem', color: C.ink3, mt: 0.5 }}>PDF format only — max 20MB</Typography>
-            </Box>
+            {type !== 'gallery' && (
+              <Box sx={{ mb: 5, border: `2px dashed ${pdfFile ? C.sky : C.border}`, p: 3, textAlign: 'center', borderRadius: '12px', bgcolor: pdfFile ? C.skyLight : C.bg, transition: 'all 0.2s' }}>
+                <input type="file" id="content-pdf" accept=".pdf" style={{ display: 'none' }} onChange={handlePdfChange} />
+                <label htmlFor="content-pdf">
+                  <Button component="span" startIcon={<PdfIcon />} variant="outlined"
+                    sx={{ mb: 1, color: C.navy, borderColor: pdfFile ? C.sky : C.border, borderRadius: '8px', '&:hover': { borderColor: C.sky, bgcolor: C.skyLight } }}>
+                    {pdfFile ? 'Change PDF' : 'Upload Research Paper PDF (Optional)'}
+                  </Button>
+                </label>
+                {pdfFile && <Typography sx={{ fontSize: '0.85rem', color: C.sky, fontWeight: 600 }}>📄 {pdfFile.name}</Typography>}
+                <Typography sx={{ fontSize: '0.72rem', color: C.ink3, mt: 0.5 }}>PDF format only — max 20MB</Typography>
+              </Box>
+            )}
 
             <Button
               type="submit"

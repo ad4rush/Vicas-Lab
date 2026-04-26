@@ -492,6 +492,31 @@ async function deleteUser(req, res) {
   }
 }
 
+async function setAlbumCover(req, res) {
+  const { id } = req.params;
+  const { cover_photo_id } = req.body;
+  
+  if (!cover_photo_id) return res.status(400).json({ error: 'cover_photo_id is required' });
+
+  const db = await getDb();
+  try {
+    const album = await db.get('SELECT id FROM albums WHERE id = ?', id);
+    if (!album) return res.status(404).json({ error: 'Album not found' });
+
+    // Ensure the photo exists
+    const photo = await db.get('SELECT id FROM photos WHERE id = ?', cover_photo_id);
+    if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+    await db.run('UPDATE albums SET cover_photo_id = ? WHERE id = ?', cover_photo_id, id);
+    res.json({ ok: true, message: 'Album cover updated' });
+  } catch (err) {
+    console.error('Set album cover error:', err);
+    res.status(500).json({ error: 'Failed to update album cover' });
+  } finally {
+    await db.close();
+  }
+}
+
 module.exports = {
   uploadPhoto,
   getApprovedPhotos,
@@ -513,4 +538,5 @@ module.exports = {
   getAllUsers,
   updateUserRole,
   deleteUser,
+  setAlbumCover,
 };
