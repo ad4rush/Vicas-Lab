@@ -453,8 +453,8 @@ export default function BTPPortal() {
                                       {uploading ? 'Submitting...' : 'Submit Weekly Report'}
                                     </Button>
                                   </Box>
-                                  </Box>
                                 )}
+
 
                                 {/* Comments Section */}
                                 <Box sx={{ mt: 5, pt: 4, borderTop: `1px solid ${C.border}` }}>
