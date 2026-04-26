@@ -144,10 +144,14 @@ export default function LoginDialog({ open, onClose, onSuccess }) {
   }
 
   async function handleFirebaseGoogleLogin() {
-    setError(null); setLoading(true);
     const provider = new GoogleAuthProvider();
     try {
+      // Open popup immediately before any React state updates to prevent popup blocking
       const result = await signInWithPopup(auth, provider);
+      
+      setError(null); 
+      setLoading(true);
+
       const idToken = await result.user.getIdToken();
       
       const res = await fetch(`${API_BASE}/api/auth/google`, {
