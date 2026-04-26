@@ -18,12 +18,12 @@ router.post('/approve/:id', authenticateToken, requireRole('admin', 'super_admin
 router.post('/reject/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.rejectPhoto);
 router.delete('/photos/:id', authenticateToken, gc.deletePhoto);
 router.put('/photos/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.updatePhoto);
-router.post('/albums', authenticateToken, requireRole('super_admin'), gc.createAlbum);
-router.put('/albums/:id', authenticateToken, requireRole('super_admin'), gc.updateAlbum);
-router.delete('/albums/:id', authenticateToken, requireRole('super_admin'), gc.deleteAlbum);
-router.post('/albums/:id/photos', authenticateToken, requireRole('super_admin'), gc.addPhotoToAlbum);
-router.delete('/albums/:id/photos/:photoId', authenticateToken, requireRole('super_admin'), gc.removePhotoFromAlbum);
-router.put('/albums/:id/cover', authenticateToken, requireRole('super_admin'), gc.setAlbumCover);
+router.post('/albums', authenticateToken, requireRole('admin', 'super_admin'), gc.createAlbum);
+router.put('/albums/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.updateAlbum);
+router.delete('/albums/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.deleteAlbum);
+router.post('/albums/:id/photos', authenticateToken, requireRole('admin', 'super_admin'), gc.addPhotoToAlbum);
+router.delete('/albums/:id/photos/:photoId', authenticateToken, requireRole('admin', 'super_admin'), gc.removePhotoFromAlbum);
+router.put('/albums/:id/cover', authenticateToken, requireRole('admin', 'super_admin'), gc.setAlbumCover);
 
 // ─── Super Admin Only Endpoints ────────────────────────────────
 router.get('/admin-requests', authenticateToken, requireRole('super_admin'), gc.getAdminRequests);

@@ -11,6 +11,8 @@ const SUPER_ADMIN_EMAILS = [
   'anujgrover@iiitd.ac.in',
   'aditya22037@iiitd.ac.in',
   'anish22075@iiitd.ac.in',
+  'adarsh22024@iiitd.ac.in',
+  'akshat22053@iiitd.ac.in',
 ];
 
 async function initDb() {

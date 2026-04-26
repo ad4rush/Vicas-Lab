@@ -94,7 +94,7 @@ async function addMember(req, res) {
   const db = await getDb();
   try {
     // Check if requester is owner or admin
-    const project = await db.get('SELECT owner_id FROM btp_projects WHERE id = ?', id);
+    const project = await db.get('SELECT owner_id, title FROM btp_projects WHERE id = ?', id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
     if (project.owner_id !== req.user.sub && req.user.role !== 'super_admin' && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Only the project owner can add members' });

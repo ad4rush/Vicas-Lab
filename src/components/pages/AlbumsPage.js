@@ -128,7 +128,7 @@ const GlobalStyles = () => (
 );
 
 function AlbumsPage() {
-  const { user, isSuperAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { albumId } = useParams();
   const navigate = useNavigate();
   const [albums, setAlbums] = useState([]);
@@ -441,7 +441,7 @@ function AlbumsPage() {
             {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
           </p>
 
-          {isSuperAdmin && (
+          {isAdmin && (
             <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
               <Button 
                 variant="outlined" size="small" startIcon={<EditIcon />}
@@ -537,7 +537,7 @@ function AlbumsPage() {
               {lightbox.index + 1} / {photos.length}
             </span>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              {isSuperAdmin && (
+              {isAdmin && (
                 <Button 
                   onClick={() => handleSetCover(currentPhoto.id)} 
                   variant="outlined" 
@@ -547,7 +547,7 @@ function AlbumsPage() {
                   Set as Cover
                 </Button>
               )}
-              { (isSuperAdmin || (user && currentPhoto && user.email === currentPhoto.uploader_email)) && (
+              { (isAdmin || (user && currentPhoto && user.email === currentPhoto.uploader_email)) && (
                 <IconButton onClick={() => handleDeletePhoto(currentPhoto.id)} className="lightbox-button" sx={{ width: 40, height: 40, color: '#ef4444' }}>
                   <DeleteIcon sx={{ fontSize: 20 }} />
                 </IconButton>
