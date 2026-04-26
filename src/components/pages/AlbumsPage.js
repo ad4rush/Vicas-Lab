@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Box, CircularProgress, Alert, IconButton,
-  Dialog, DialogContent, Skeleton, Grow
+  Dialog, DialogContent, Skeleton, Grow, DialogTitle, DialogActions, Button, TextField, Checkbox
 } from '@mui/material';
 import {
   PhotoLibrary as AlbumIcon, ArrowBack as BackIcon,
   Close as CloseIcon, ArrowBack as PrevIcon, ArrowForward as NextIcon,
   Person as PersonIcon, CalendarToday as DateIcon,
-  Collections as CollectionsIcon, Delete as DeleteIcon
+  Collections as CollectionsIcon, Delete as DeleteIcon, Edit as EditIcon, AddPhotoAlternate as AddPhotoIcon
 } from '@mui/icons-material';
 import main_4 from '../../Photos/main_4.jpeg';
 import { useAuth } from '../../contexts/AuthContext';
@@ -138,6 +138,16 @@ function AlbumsPage() {
   const [error, setError] = useState(null);
   const [lightbox, setLightbox] = useState({ open: false, index: 0 });
 
+  // Dialog States
+  const [editDialog, setEditDialog] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  
+  const [addPhotoDialog, setAddPhotoDialog] = useState(false);
+  const [allGalleryPhotos, setAllGalleryPhotos] = useState([]);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [addLoading, setAddLoading] = useState(false);
+
   useEffect(() => {
     if (albumId) {
       fetchAlbumPhotos(albumId);
@@ -217,6 +227,55 @@ function AlbumsPage() {
       closeLightbox();
       fetchAlbumPhotos(albumId);
     } catch (err) { setError(err.message); }
+  }
+
+  async function handleEditAlbum() {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(`${API_BASE}/api/gallery/albums/${albumId}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editName, description: editDesc })
+      });
+      if (!res.ok) throw new Error('Failed to update album');
+      setEditDialog(false);
+      fetchAlbumPhotos(albumId);
+    } catch (err) { setError(err.message); }
+  }
+
+  async function handleOpenAddPhoto() {
+    setAddPhotoDialog(true);
+    setAddLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/gallery/photos`);
+      const data = await res.json();
+      if (res.ok) setAllGalleryPhotos(data.photos || []);
+    } catch (err) { setError(err.message); } finally {
+      setAddLoading(false);
+    }
+  }
+
+  const handleToggleSelectPhoto = (id) => {
+    setSelectedPhotos(prev => prev.includes(id) ? prev.filter(pId => pId !== id) : [...prev, id]);
+  };
+
+  async function handleAddSelectedPhotos() {
+    setAddLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      for (const pId of selectedPhotos) {
+        await fetch(`${API_BASE}/api/gallery/albums/${albumId}/photos`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photoId: pId })
+        });
+      }
+      setAddPhotoDialog(false);
+      setSelectedPhotos([]);
+      fetchAlbumPhotos(albumId);
+    } catch (err) { setError(err.message); } finally {
+      setAddLoading(false);
+    }
   }
 
   // ─── Album List View ──────────────────────────────────────────
@@ -364,6 +423,29 @@ function AlbumsPage() {
           }}>
             {photos.length} {photos.length === 1 ? 'Photo' : 'Photos'}
           </p>
+
+          {(isSuperAdmin || (user && user.role === 'admin')) && (
+            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+              <Button 
+                variant="outlined" size="small" startIcon={<EditIcon />}
+                onClick={() => {
+                  setEditName(albumDetail?.name || '');
+                  setEditDesc(albumDetail?.description || '');
+                  setEditDialog(true);
+                }}
+                sx={{ borderRadius: '8px', color: C.navy, borderColor: C.border }}
+              >
+                Edit Album
+              </Button>
+              <Button 
+                variant="contained" size="small" startIcon={<AddPhotoIcon />}
+                onClick={handleOpenAddPhoto}
+                sx={{ borderRadius: '8px', bgcolor: C.navy, '&:hover': { bgcolor: C.navyDark } }}
+              >
+                Add Photos
+              </Button>
+            </Box>
+          )}
         </Container>
       </section>
 
@@ -503,6 +585,57 @@ function AlbumsPage() {
             </div>
           )}
         </DialogContent>
+      </Dialog>
+
+      {/* Edit Album Dialog */}
+      <Dialog open={editDialog} onClose={() => setEditDialog(false)} PaperProps={{ sx: { borderRadius: '12px', minWidth: '400px' } }}>
+        <DialogTitle sx={{ fontWeight: 800, color: C.navy, borderBottom: `1px solid ${C.border}` }}>Edit Album Details</DialogTitle>
+        <DialogContent sx={{ pt: 4 }}>
+          <TextField autoFocus fullWidth label="Album Name" value={editName} onChange={e => setEditName(e.target.value)} sx={{ mb: 3 }} />
+          <TextField fullWidth multiline rows={3} label="Description" value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 0 }}>
+          <Button onClick={() => setEditDialog(false)} sx={{ color: C.ink3 }}>Cancel</Button>
+          <Button onClick={handleEditAlbum} variant="contained" sx={{ bgcolor: C.navy }}>Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Photos Dialog */}
+      <Dialog open={addPhotoDialog} onClose={() => setAddPhotoDialog(false)} PaperProps={{ sx: { borderRadius: '12px', minWidth: '60vw', minHeight: '60vh' } }}>
+        <DialogTitle sx={{ fontWeight: 800, color: C.navy, borderBottom: `1px solid ${C.border}` }}>Add Photos to Album</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          {addLoading ? <CircularProgress sx={{ display: 'block', mx: 'auto', mt: 4 }} /> : (
+            <div className="album-photo-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' }}>
+              {allGalleryPhotos.map(photo => {
+                const isSelected = selectedPhotos.includes(photo.id);
+                const isAlreadyInAlbum = photos.some(p => p.id === photo.id);
+                return (
+                  <div 
+                    key={photo.id} 
+                    style={{ 
+                      position: 'relative', aspectRatio: '1', cursor: isAlreadyInAlbum ? 'not-allowed' : 'pointer',
+                      border: isSelected ? `4px solid ${C.sky}` : 'none', opacity: isAlreadyInAlbum ? 0.3 : 1
+                    }}
+                    onClick={() => !isAlreadyInAlbum && handleToggleSelectPhoto(photo.id)}
+                  >
+                    <img src={getImageUrl(photo.image_url)} alt="gallery" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {isSelected && (
+                      <div style={{ position: 'absolute', top: 5, right: 5, background: C.sky, borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ color: 'white', fontWeight: 'bold' }}>✓</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, borderTop: `1px solid ${C.border}` }}>
+          <Button onClick={() => setAddPhotoDialog(false)} sx={{ color: C.ink3 }}>Cancel</Button>
+          <Button onClick={handleAddSelectedPhotos} variant="contained" disabled={selectedPhotos.length === 0 || addLoading} sx={{ bgcolor: C.navy }}>
+            Add {selectedPhotos.length} Photos
+          </Button>
+        </DialogActions>
       </Dialog>
     </div>
   );

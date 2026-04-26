@@ -188,9 +188,9 @@ const ProjectsPage = () => {
         <Fade in={open}>
           <Box sx={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            width: '95%', maxWidth: '640px',
+            width: '95%', maxWidth: '640px', maxHeight: '90vh',
             bgcolor: C.white, borderRadius: '12px',
-            boxShadow: '0 32px 64px rgba(0,0,0,0.3)', p: 0, outline: 'none', overflow: 'hidden'
+            boxShadow: '0 32px 64px rgba(0,0,0,0.3)', p: 0, outline: 'none', overflowY: 'auto'
           }}>
             {selectedProject && (
               <div style={{ position: 'relative' }}>

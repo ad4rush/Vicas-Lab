@@ -19,6 +19,7 @@ router.post('/reject/:id', authenticateToken, requireRole('admin', 'super_admin'
 router.delete('/photos/:id', authenticateToken, gc.deletePhoto);
 router.put('/photos/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.updatePhoto);
 router.post('/albums', authenticateToken, requireRole('admin', 'super_admin'), gc.createAlbum);
+router.put('/albums/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.updateAlbum);
 router.delete('/albums/:id', authenticateToken, requireRole('admin', 'super_admin'), gc.deleteAlbum);
 router.post('/albums/:id/photos', authenticateToken, requireRole('admin', 'super_admin'), gc.addPhotoToAlbum);
 router.delete('/albums/:id/photos/:photoId', authenticateToken, requireRole('admin', 'super_admin'), gc.removePhotoFromAlbum);

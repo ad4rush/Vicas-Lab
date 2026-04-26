@@ -219,6 +219,30 @@ async function createAlbum(req, res) {
   }
 }
 
+async function updateAlbum(req, res) {
+  const { id } = req.params;
+  const { name, description } = req.body;
+  const db = await getDb();
+  
+  try {
+    const album = await db.get('SELECT * FROM albums WHERE id = ?', id);
+    if (!album) return res.status(404).json({ error: 'Album not found' });
+
+    await db.run(
+      'UPDATE albums SET name = ?, description = ? WHERE id = ?',
+      name !== undefined ? name : album.name,
+      description !== undefined ? description : album.description,
+      id
+    );
+    res.json({ ok: true, message: 'Album updated' });
+  } catch (err) {
+    console.error('Update album error:', err);
+    res.status(500).json({ error: 'Failed to update album' });
+  } finally {
+    await db.close();
+  }
+}
+
 async function getAlbums(req, res) {
   const db = await getDb();
   try {
@@ -477,6 +501,7 @@ module.exports = {
   deletePhoto,
   updatePhoto,
   createAlbum,
+  updateAlbum,
   getAlbums,
   getAlbumPhotos,
   addPhotoToAlbum,

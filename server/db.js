@@ -137,6 +137,16 @@ async function initDb() {
       FOREIGN KEY (project_id) REFERENCES btp_projects(id) ON DELETE CASCADE,
       FOREIGN KEY (uploaded_by) REFERENCES users(id)
     );
+
+    CREATE TABLE IF NOT EXISTS btp_invites (
+      token TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      email TEXT NOT NULL,
+      inviter_id TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES btp_projects(id) ON DELETE CASCADE,
+      FOREIGN KEY (inviter_id) REFERENCES users(id)
+    );
   `);
 
   // Migrate old role names to new ones

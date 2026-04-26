@@ -3,7 +3,7 @@ import {
   Container, Typography, Box, Paper, Button, TextField, Grid,
   List, ListItem, ListItemText, ListItemIcon, Divider, Chip,
   Dialog, DialogTitle, DialogContent, DialogActions, Alert,
-  CircularProgress, IconButton, Avatar
+  CircularProgress, IconButton, Avatar, Switch, FormControlLabel
 } from '@mui/material';
 import {
   Assignment as ProjectIcon, Add as AddIcon, PersonAdd as MemberIcon,
@@ -60,6 +60,7 @@ export default function BTPPortal() {
 
   const [reportText, setReportText] = useState('');
   const [reportFile, setReportFile] = useState(null);
+  const [isPublic, setIsPublic] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -156,7 +157,7 @@ export default function BTPPortal() {
         body: JSON.stringify({
           weekNumber: activeWeek,
           reportText,
-          isPublic: false,
+          isPublic: isPublic,
           fileName: reportFile?.name,
           fileData: reportFile?.data
         })
@@ -279,7 +280,7 @@ export default function BTPPortal() {
 
                 <Grid container>
                   {/* Weeks Sidebar */}
-                  <Grid item xs={12} sm={2} sx={{ borderRight: `1px solid ${C.border}`, bgcolor: C.bg, maxHeight: '600px', overflowY: 'auto' }}>
+                  <Grid item xs={12} md={3} sx={{ borderRight: `1px solid ${C.border}`, bgcolor: C.bg, maxHeight: '600px', overflowY: 'auto' }}>
                     <List sx={{ p: 2 }}>
                       {weeks.map(w => {
                         const hasReport = projectData.reports.some(r => r.week_number === w);
@@ -310,7 +311,7 @@ export default function BTPPortal() {
                   </Grid>
 
                   {/* Week Content */}
-                  <Grid item xs={12} sm={10} sx={{ p: 4, bgcolor: C.white, minHeight: '500px' }}>
+                  <Grid item xs={12} md={9} sx={{ p: 4, bgcolor: C.white, minHeight: '500px' }}>
                     {activeWeek ? (
                       <Box>
                         <Typography sx={{ fontSize: '1.4rem', fontWeight: 800, color: C.navy, mb: 3 }}>
@@ -318,71 +319,82 @@ export default function BTPPortal() {
                         </Typography>
                         
                         {(() => {
-                          const existingReport = projectData.reports.find(r => r.week_number === activeWeek);
+                          const existingReports = projectData.reports.filter(r => r.week_number === activeWeek);
+                          const myReportSubmitted = existingReports.some(r => r.uploaded_by === user?.id);
                           
-                          if (existingReport) {
-                            return (
-                              <Box sx={{ p: 3, bgcolor: C.bg, borderRadius: '12px', border: `1px solid ${C.border}` }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
-                                  <Avatar sx={{ width: 32, height: 32, bgcolor: C.sky, fontSize: '0.8rem', fontWeight: 800 }}>{existingReport.uploader_name?.[0]}</Avatar>
-                                  <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: C.navy }}>Submitted by {existingReport.uploader_name}</Typography>
-                                  <Typography sx={{ fontSize: '0.8rem', color: C.ink3, ml: 'auto' }}>{new Date(existingReport.uploaded_at).toLocaleDateString()}</Typography>
-                                </Box>
-                                {existingReport.report_text && (
-                                  <Typography sx={{ color: C.ink2, whiteSpace: 'pre-wrap', mb: 3, fontSize: '0.95rem', lineHeight: 1.6 }}>
-                                    {existingReport.report_text}
-                                  </Typography>
-                                )}
-                                {existingReport.report_file_url && (
-                                  <Button 
-                                    variant="outlined" 
-                                    href={`${API_BASE}${existingReport.report_file_url}`} 
-                                    target="_blank"
-                                    startIcon={<ReportIcon />}
-                                    sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700, color: C.navy, borderColor: C.border }}
-                                  >
-                                    View Attached Document
-                                  </Button>
-                                )}
-                              </Box>
-                            );
-                          }
-
                           return (
-                            <Box sx={{ mt: 2 }}>
-                              <TextField
-                                fullWidth
-                                multiline
-                                rows={6}
-                                placeholder="Describe the progress made this week..."
-                                value={reportText}
-                                onChange={e => setReportText(e.target.value)}
-                                sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-                              />
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-                                <Button
-                                  variant="outlined"
-                                  component="label"
-                                  startIcon={<UploadIcon />}
-                                  sx={{ borderRadius: '8px', color: C.navy, borderColor: C.border, fontWeight: 700, '&:hover': { bgcolor: C.bg } }}
-                                >
-                                  Attach File
-                                  <input type="file" hidden onChange={handleFileChange} />
-                                </Button>
-                                {reportFile && (
-                                  <Typography sx={{ fontSize: '0.85rem', color: C.ink2, fontWeight: 600 }}>
-                                    {reportFile.name}
-                                  </Typography>
-                                )}
-                              </Box>
-                              <Button
-                                variant="contained"
-                                onClick={handleSubmitReport}
-                                disabled={uploading || (!reportText && !reportFile)}
-                                sx={{ bgcolor: C.navy, borderRadius: '8px', fontWeight: 700, px: 4, py: 1.5, '&:hover': { bgcolor: C.navyDark } }}
-                              >
-                                {uploading ? 'Submitting...' : 'Submit Weekly Report'}
-                              </Button>
+                            <Box>
+                              {existingReports.map(report => (
+                                <Box key={report.id} sx={{ p: 3, bgcolor: C.bg, borderRadius: '12px', border: `1px solid ${C.border}`, mb: 3 }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
+                                    <Avatar sx={{ width: 32, height: 32, bgcolor: C.sky, fontSize: '0.8rem', fontWeight: 800 }}>{report.uploader_name?.[0]}</Avatar>
+                                    <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: C.navy }}>Submitted by {report.uploader_name}</Typography>
+                                    <Typography sx={{ fontSize: '0.8rem', color: C.ink3, ml: 'auto' }}>{new Date(report.uploaded_at).toLocaleString()}</Typography>
+                                  </Box>
+                                  {report.report_text && (
+                                    <Typography sx={{ color: C.ink2, whiteSpace: 'pre-wrap', mb: 3, fontSize: '0.95rem', lineHeight: 1.6 }}>
+                                      {report.report_text}
+                                    </Typography>
+                                  )}
+                                  {report.report_file_url && (
+                                    <Button 
+                                      variant="outlined" 
+                                      href={`${API_BASE}${report.report_file_url}`} 
+                                      target="_blank"
+                                      startIcon={<ReportIcon />}
+                                      sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700, color: C.navy, borderColor: C.border }}
+                                    >
+                                      View Attached Document
+                                    </Button>
+                                  )}
+                                </Box>
+                              ))}
+
+                              {!myReportSubmitted && (
+                                <Box sx={{ mt: 4, p: 3, border: `1px dashed ${C.border}`, borderRadius: '12px' }}>
+                                  <Typography sx={{ fontWeight: 700, color: C.navy, mb: 2 }}>Submit Your Report</Typography>
+                                  <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={4}
+                                    placeholder="Describe the progress made this week..."
+                                    value={reportText}
+                                    onChange={e => setReportText(e.target.value)}
+                                    sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '8px', bgcolor: C.white } }}
+                                  />
+                                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                      <Button
+                                        variant="outlined"
+                                        component="label"
+                                        startIcon={<UploadIcon />}
+                                        sx={{ borderRadius: '8px', color: C.navy, borderColor: C.border, fontWeight: 700, '&:hover': { bgcolor: C.bg } }}
+                                      >
+                                        Attach File
+                                        <input type="file" hidden onChange={handleFileChange} />
+                                      </Button>
+                                      {reportFile && (
+                                        <Typography sx={{ fontSize: '0.85rem', color: C.ink2, fontWeight: 600 }}>
+                                          {reportFile.name}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                    <FormControlLabel
+                                      control={<Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} color="primary" />}
+                                      label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: C.ink2 }}>Make Public</Typography>}
+                                    />
+                                  </Box>
+                                  <Button
+                                    variant="contained"
+                                    onClick={handleSubmitReport}
+                                    disabled={uploading || (!reportText && !reportFile)}
+                                    fullWidth
+                                    sx={{ bgcolor: C.navy, borderRadius: '8px', fontWeight: 700, py: 1.5, '&:hover': { bgcolor: C.navyDark } }}
+                                  >
+                                    {uploading ? 'Submitting...' : 'Submit Weekly Report'}
+                                  </Button>
+                                </Box>
+                              )}
                             </Box>
                           );
                         })()}

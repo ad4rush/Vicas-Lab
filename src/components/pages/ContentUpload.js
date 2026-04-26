@@ -158,7 +158,8 @@ function ContentUpload() {
             <FormControl fullWidth sx={{ mb: 4 }}>
               <InputLabel>Content Type</InputLabel>
               <Select value={type} onChange={(e) => { setType(e.target.value); setMetadata({}); }} label="Content Type" sx={{ borderRadius: '10px' }}>
-                <MenuItem value="project">🔬 Research Project</MenuItem>
+                <MenuItem value="project">🚀 Project</MenuItem>
+                <MenuItem value="research">🔬 Research / Publication</MenuItem>
                 <MenuItem value="news">📰 News / Update</MenuItem>
                 <MenuItem value="achievement">🏆 Achievement</MenuItem>
               </Select>
@@ -174,6 +175,7 @@ function ContentUpload() {
             {/* Type-specific metadata */}
             {type === 'project' && (
               <>
+                <TextField fullWidth type="date" label="Project Start Date *" InputLabelProps={{ shrink: true }} value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} required sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Collaborators / Partners" value={metadata.collaborators || ''} onChange={(e) => handleMetadataChange('collaborators', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Funding Source" value={metadata.funding || ''} onChange={(e) => handleMetadataChange('funding', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Category Tag (e.g., Memory, Architecture, AI)" value={metadata.tag || ''} onChange={(e) => handleMetadataChange('tag', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
@@ -181,16 +183,25 @@ function ContentUpload() {
               </>
             )}
 
+            {type === 'research' && (
+              <>
+                <TextField fullWidth type="date" label="Publication Date *" InputLabelProps={{ shrink: true }} value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} required sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                <TextField fullWidth label="Authors *" value={metadata.author || ''} onChange={(e) => handleMetadataChange('author', e.target.value)} required sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                <TextField fullWidth label="Journal / Conference *" value={metadata.journal || ''} onChange={(e) => handleMetadataChange('journal', e.target.value)} required sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                <TextField fullWidth label="Research Topic / Category Tag *" value={metadata.topic || ''} onChange={(e) => handleMetadataChange('topic', e.target.value)} required sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+              </>
+            )}
+
             {type === 'news' && (
               <>
-                <TextField fullWidth type="date" label="Date" InputLabelProps={{ shrink: true }} value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                <TextField fullWidth type="date" label="Date *" InputLabelProps={{ shrink: true }} value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} required sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Category Tag (e.g., Award, Funding, Paper)" value={metadata.tag || ''} onChange={(e) => handleMetadataChange('tag', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
               </>
             )}
 
             {type === 'achievement' && (
               <>
-                <TextField fullWidth type="date" label="Date" InputLabelProps={{ shrink: true }} value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+                <TextField fullWidth type="date" label="Date *" InputLabelProps={{ shrink: true }} value={metadata.date || ''} onChange={(e) => handleMetadataChange('date', e.target.value)} required sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Awarded To / Recipient" value={metadata.awardedTo || ''} onChange={(e) => handleMetadataChange('awardedTo', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
                 <TextField fullWidth label="Awarding Body / Conference" value={metadata.awardedBy || ''} onChange={(e) => handleMetadataChange('awardedBy', e.target.value)} sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
               </>

@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs').promises;
 
 const BTP_UPLOAD_DIR = path.join(__dirname, '..', 'uploads', 'btp');
+const transporter = require('../utils/email');
 
 async function saveBtpFileLocally(base64Data, fileName) {
   if (!base64Data) return { publicUrl: null, storagePath: null };
@@ -100,7 +101,24 @@ async function addMember(req, res) {
     }
 
     const targetUser = await db.get('SELECT id FROM users WHERE email = ?', email);
-    if (!targetUser) return res.status(404).json({ error: 'User with this email not found' });
+    if (!targetUser) {
+      // User not registered, create an invite and send email
+      const token = uuidv4();
+      await db.run('INSERT INTO btp_invites (token, project_id, email, inviter_id) VALUES (?, ?, ?, ?)', token, id, email, req.user.sub);
+      
+      const inviter = await db.get('SELECT name FROM users WHERE id = ?', req.user.sub);
+      const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invite/${token}`;
+      
+      const mailOptions = {
+        from: process.env.SMTP_FROM || '"VICAS Lab" <noreply@vicaslab.com>',
+        to: email,
+        subject: `Invitation to join BTP Project: "${project.title}"`,
+        text: `Hello,\n\n${inviter.name} is sending you a request to join the BTP project "${project.title}".\n\nPlease join by clicking this link:\n${inviteUrl}\n\nBest,\nVICAS Lab`
+      };
+      
+      await transporter.sendMail(mailOptions);
+      return res.json({ ok: true, message: 'Invite sent to unregistered user.' });
+    }
 
     const existing = await db.get('SELECT * FROM btp_members WHERE project_id = ? AND user_id = ?', id, targetUser.id);
     if (existing) return res.status(400).json({ error: 'User is already a member' });
@@ -110,6 +128,39 @@ async function addMember(req, res) {
   } catch (err) {
     console.error('Add BTP member error:', err);
     res.status(500).json({ error: 'Failed to add member' });
+  } finally {
+    await db.close();
+  }
+}
+
+async function acceptInvite(req, res) {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: 'Invite token is required' });
+
+  const db = await getDb();
+  try {
+    const invite = await db.get('SELECT * FROM btp_invites WHERE token = ?', token);
+    if (!invite) return res.status(404).json({ error: 'Invalid or expired invite token' });
+
+    // Verify the logged in user matches the invite email
+    const user = await db.get('SELECT id, email FROM users WHERE id = ?', req.user.sub);
+    if (user.email.toLowerCase() !== invite.email.toLowerCase()) {
+      return res.status(403).json({ error: 'This invite was sent to a different email address' });
+    }
+
+    // Check if already a member
+    const existing = await db.get('SELECT * FROM btp_members WHERE project_id = ? AND user_id = ?', invite.project_id, user.id);
+    if (!existing) {
+      await db.run('INSERT INTO btp_members (project_id, user_id) VALUES (?, ?)', invite.project_id, user.id);
+    }
+
+    // Remove the invite
+    await db.run('DELETE FROM btp_invites WHERE token = ?', token);
+
+    res.json({ ok: true, message: 'Successfully joined the project' });
+  } catch (err) {
+    console.error('Accept BTP invite error:', err);
+    res.status(500).json({ error: 'Failed to accept invite' });
   } finally {
     await db.close();
   }
@@ -203,6 +254,7 @@ module.exports = {
   createProject,
   getMyProjects,
   addMember,
+  acceptInvite,
   uploadReport,
   getProjectReports
 };

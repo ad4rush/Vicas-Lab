@@ -18,6 +18,7 @@ import GalleryUpload from './components/pages/GalleryUpload';
 import ContentUpload from './components/pages/ContentUpload';
 import AlbumsPage from './components/pages/AlbumsPage';
 import BTPPortal from './components/pages/BTPPortal';
+import InvitePage from './components/pages/InvitePage';
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
                   <BTPPortal />
                 </ProtectedRoute>
               } />
+              <Route path="/invite/:token" element={<InvitePage />} />
             </Routes>
           </Box>
           <Footer />

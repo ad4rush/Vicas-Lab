@@ -87,21 +87,30 @@ const GlobalStyles = () => (
 
     /* ─── Date Section Header ─── */
     .gallery-date-header {
-      padding: 24px 0 12px;
+      padding: 32px 0 16px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
     }
     .gallery-date-header h3 {
-      font-size: 1.1rem;
+      font-size: 1.4rem;
       font-weight: 800;
       color: ${C.navy};
       margin: 0;
+      position: relative;
     }
     .gallery-date-header .date-count {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: ${C.ink3};
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: ${C.navy};
+      background: ${C.skyLight};
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .gallery-date-line {
+      flex: 1;
+      height: 1px;
+      background: ${C.border};
     }
 
     /* ─── Lightbox ─── */
@@ -286,6 +295,7 @@ const GalleryPage = () => {
                 <div className="gallery-date-header">
                   <h3>{group.label}</h3>
                   <span className="date-count">{group.photos.length} photos</span>
+                  <div className="gallery-date-line" />
                 </div>
 
                 {/* Photo grid for this month */}
