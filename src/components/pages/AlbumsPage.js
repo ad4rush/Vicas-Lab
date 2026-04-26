@@ -213,11 +213,11 @@ function AlbumsPage() {
 
   const currentPhoto = photos[lightbox.index];
 
-  async function handleDeletePhoto(id) {
-    if (!window.confirm('Delete this photo permanently?')) return;
+  async function handleRemovePhoto(photoId) {
+    if (!window.confirm('Remove this photo from the album? (It will remain in the main gallery)')) return;
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`${API_BASE}/api/gallery/photos/${id}`, { 
+      const res = await fetch(`${API_BASE}/api/gallery/albums/${albumId}/photos/${photoId}`, { 
         method: 'DELETE', 
         headers: { 'Authorization': `Bearer ${token}` },
         credentials: 'include' 
@@ -548,7 +548,7 @@ function AlbumsPage() {
                 </Button>
               )}
               { (isAdmin || (user && currentPhoto && user.email === currentPhoto.uploader_email)) && (
-                <IconButton onClick={() => handleDeletePhoto(currentPhoto.id)} className="lightbox-button" sx={{ width: 40, height: 40, color: '#ef4444' }}>
+                <IconButton onClick={() => handleRemovePhoto(currentPhoto.id)} className="lightbox-button" sx={{ width: 40, height: 40, color: '#ef4444' }}>
                   <DeleteIcon sx={{ fontSize: 20 }} />
                 </IconButton>
               )}
