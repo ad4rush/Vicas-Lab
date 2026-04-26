@@ -310,7 +310,7 @@ export default function BTPPortal() {
                       <Typography sx={{ color: C.ink3, fontSize: '0.9rem', mt: 0.5 }}>Owner: {selectedProject.owner_name}</Typography>
                     </div>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                      {(selectedProject.owner_id === user?.id || user?.role === 'super_admin') && (
+                      {(selectedProject.owner_id === user?.id) && (
                         <FormControlLabel
                           control={<Switch checked={selectedProject.is_public === 1} onChange={(e) => handleTogglePrivacy(e.target.checked)} color="primary" />}
                           label={<Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: C.ink2 }}>Public Project</Typography>}

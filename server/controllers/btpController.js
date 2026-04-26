@@ -263,8 +263,8 @@ async function toggleProjectPrivacy(req, res) {
     const project = await db.get('SELECT owner_id FROM btp_projects WHERE id = ?', id);
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
-    if (project.owner_id !== req.user.sub && req.user.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Only the project owner or a superadmin can toggle privacy' });
+    if (project.owner_id !== req.user.sub) {
+      return res.status(403).json({ error: 'Only the project owner can toggle privacy' });
     }
 
     await db.run('UPDATE btp_projects SET is_public = ? WHERE id = ?', is_public ? 1 : 0, id);
