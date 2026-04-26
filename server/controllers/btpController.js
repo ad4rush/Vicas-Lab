@@ -107,7 +107,7 @@ async function addMember(req, res) {
       await db.run('INSERT INTO btp_invites (token, project_id, email, inviter_id) VALUES (?, ?, ?, ?)', token, id, email, req.user.sub);
       
       const inviter = await db.get('SELECT name FROM users WHERE id = ?', req.user.sub);
-      const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/invite/${token}`;
+      const inviteUrl = `${process.env.FRONTEND_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:3000'}/invite/${token}`;
       
       const mailOptions = {
         from: process.env.SMTP_FROM || '"VICAS Lab" <noreply@vicaslab.com>',
