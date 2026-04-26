@@ -62,6 +62,10 @@ export default function BTPPortal() {
   const [reportFile, setReportFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -72,8 +76,45 @@ export default function BTPPortal() {
     }
   }, [selectedProject]);
 
+  useEffect(() => {
+    if (selectedProject && activeWeek) {
+      fetchComments(selectedProject.id, activeWeek);
+    }
+  }, [selectedProject, activeWeek]);
+
   const token = localStorage.getItem('accessToken');
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  async function fetchComments(projectId, week) {
+    setLoadingComments(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/btp/${projectId}/comments?week=${week}`, { headers });
+      const data = await res.json();
+      if (res.ok) {
+        setComments(data.comments || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch comments', err);
+    } finally {
+      setLoadingComments(false);
+    }
+  }
+
+  async function handleAddComment() {
+    if (!newComment.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/btp/${selectedProject.id}/comments`, {
+        method: 'POST', headers,
+        body: JSON.stringify({ week_number: activeWeek, comment_text: newComment })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setNewComment('');
+      fetchComments(selectedProject.id, activeWeek);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   async function fetchProjects() {
     setLoading(true);
@@ -412,7 +453,62 @@ export default function BTPPortal() {
                                       {uploading ? 'Submitting...' : 'Submit Weekly Report'}
                                     </Button>
                                   </Box>
+                                  </Box>
                                 )}
+
+                                {/* Comments Section */}
+                                <Box sx={{ mt: 5, pt: 4, borderTop: `1px solid ${C.border}` }}>
+                                  <Typography sx={{ fontWeight: 800, color: C.navy, mb: 3 }}>Discussion & Feedback</Typography>
+                                  
+                                  {loadingComments ? (
+                                    <CircularProgress size={24} sx={{ display: 'block', mx: 'auto' }} />
+                                  ) : (
+                                    <Box sx={{ mb: 4 }}>
+                                      {comments.length === 0 ? (
+                                        <Typography sx={{ color: C.ink3, fontSize: '0.9rem', fontStyle: 'italic' }}>No comments yet.</Typography>
+                                      ) : (
+                                        comments.map(comment => (
+                                          <Box key={comment.id} sx={{ mb: 2, display: 'flex', gap: 2 }}>
+                                            <Avatar sx={{ width: 32, height: 32, bgcolor: C.skyLight, color: C.sky, fontWeight: 700, fontSize: '0.9rem' }}>
+                                              {comment.user_name?.[0]}
+                                            </Avatar>
+                                            <Box sx={{ flex: 1, bgcolor: C.bg, p: 2, borderRadius: '0 12px 12px 12px' }}>
+                                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: C.navy }}>{comment.user_name}</Typography>
+                                                <Typography sx={{ fontSize: '0.75rem', color: C.ink3 }}>{new Date(comment.created_at).toLocaleString()}</Typography>
+                                              </Box>
+                                              <Typography sx={{ fontSize: '0.95rem', color: C.ink2, whiteSpace: 'pre-wrap' }}>{comment.comment_text}</Typography>
+                                            </Box>
+                                          </Box>
+                                        ))
+                                      )}
+                                    </Box>
+                                  )}
+
+                                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                                    <Avatar sx={{ width: 32, height: 32, bgcolor: C.navy, fontSize: '0.9rem' }}>{user?.name?.[0]}</Avatar>
+                                    <Box sx={{ flex: 1 }}>
+                                      <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={2}
+                                        placeholder="Add a comment..."
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '12px', bgcolor: C.white } }}
+                                      />
+                                      <Button 
+                                        variant="contained" 
+                                        disabled={!newComment.trim()}
+                                        onClick={handleAddComment}
+                                        sx={{ bgcolor: C.navy, borderRadius: '8px', fontWeight: 700, '&:hover': { bgcolor: C.navyDark } }}
+                                      >
+                                        Post Comment
+                                      </Button>
+                                    </Box>
+                                  </Box>
+                                </Box>
+
                               </Box>
                             );
                           })()}

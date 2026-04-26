@@ -277,6 +277,79 @@ async function toggleProjectPrivacy(req, res) {
   }
 }
 
+async function getProjectComments(req, res) {
+  const { id } = req.params;
+  const { week } = req.query;
+  const user = req.user;
+  
+  if (!week) return res.status(400).json({ error: 'week query parameter is required' });
+
+  const db = await getDb();
+  try {
+    const project = await db.get('SELECT id, is_public FROM btp_projects WHERE id = ?', id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    if (!project.is_public && user.role !== 'super_admin') {
+      const isMember = await db.get('SELECT 1 FROM btp_members WHERE project_id = ? AND user_id = ?', id, user.sub);
+      if (!isMember) {
+        return res.status(403).json({ error: 'Not authorized to view comments for this project' });
+      }
+    }
+
+    const comments = await db.all(
+      `SELECT id, user_id, user_name, comment_text, created_at 
+       FROM btp_comments 
+       WHERE project_id = ? AND week_number = ? 
+       ORDER BY created_at ASC`,
+      id, week
+    );
+
+    res.json({ comments });
+  } catch (err) {
+    console.error('Get project comments error:', err);
+    res.status(500).json({ error: 'Failed to fetch comments' });
+  } finally {
+    await db.close();
+  }
+}
+
+async function addProjectComment(req, res) {
+  const { id } = req.params;
+  const { week_number, comment_text } = req.body;
+  const user = req.user;
+
+  if (!week_number || !comment_text) {
+    return res.status(400).json({ error: 'week_number and comment_text are required' });
+  }
+
+  const db = await getDb();
+  try {
+    const project = await db.get('SELECT id, is_public FROM btp_projects WHERE id = ?', id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+
+    if (!project.is_public && user.role !== 'super_admin') {
+      const isMember = await db.get('SELECT 1 FROM btp_members WHERE project_id = ? AND user_id = ?', id, user.sub);
+      if (!isMember) {
+        return res.status(403).json({ error: 'Not authorized to comment on this project' });
+      }
+    }
+
+    const commentId = uuidv4();
+    await db.run(
+      `INSERT INTO btp_comments (id, project_id, week_number, user_id, user_name, comment_text)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      commentId, id, week_number, user.sub, user.name, comment_text
+    );
+
+    res.json({ ok: true, message: 'Comment added successfully', commentId });
+  } catch (err) {
+    console.error('Add project comment error:', err);
+    res.status(500).json({ error: 'Failed to add comment' });
+  } finally {
+    await db.close();
+  }
+}
+
 module.exports = {
   createProject,
   getMyProjects,
@@ -284,5 +357,7 @@ module.exports = {
   acceptInvite,
   uploadReport,
   getProjectReports,
-  toggleProjectPrivacy
+  toggleProjectPrivacy,
+  getProjectComments,
+  addProjectComment
 };
