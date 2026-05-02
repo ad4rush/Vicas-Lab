@@ -1,9 +1,7 @@
-const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
-const { open } = require('sqlite');
-const fs = require('fs');
+const { createClient } = require('@libsql/client');
 
-const DB_FILE = process.env.DB_FILE || path.join(__dirname, 'data', 'db.sqlite');
+const url = process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
 
 // Fixed Super Admin emails — these always get super_admin role
 const SUPER_ADMIN_EMAILS = [
@@ -15,11 +13,45 @@ const SUPER_ADMIN_EMAILS = [
   'akshat22053@iiitd.ac.in',
 ];
 
-async function initDb() {
-  const dir = path.dirname(DB_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+/**
+ * Creates a compatibility wrapper for the LibSQL client
+ * to match the 'sqlite' package API used in the project.
+ */
+function createDbWrapper(client) {
+  return {
+    exec: async (sql) => {
+      // exec in 'sqlite' usually handles multiple statements
+      // LibSQL executeMultiple is better for this
+      return await client.executeMultiple(sql);
+    },
+    run: async (sql, ...params) => {
+      // LibSQL uses :param or ? but we need to handle positional params
+      return await client.execute({ sql, args: params });
+    },
+    get: async (sql, ...params) => {
+      const rs = await client.execute({ sql, args: params });
+      return rs.rows[0] ? { ...rs.rows[0] } : undefined;
+    },
+    all: async (sql, ...params) => {
+      const rs = await client.execute({ sql, args: params });
+      return rs.rows.map(row => ({ ...row }));
+    },
+    close: async () => {
+      return await client.close();
+    }
+  };
+}
 
-  const db = await open({ filename: DB_FILE, driver: sqlite3.Database });
+async function initDb() {
+  if (!url) {
+    console.warn('TURSO_DATABASE_URL not set. Skipping initDb.');
+    return;
+  }
+
+  const client = createClient({ url, authToken });
+  const db = createDbWrapper(client);
+
+  console.log('Initializing Turso Database...');
 
   // Core tables
   await db.exec(`
@@ -180,13 +212,21 @@ async function initDb() {
   }
 
   console.log('Database initialized, roles synced');
-  await db.close();
+  await client.close();
 }
 
 async function getDb() {
-  const db = await open({ filename: DB_FILE, driver: sqlite3.Database });
-  await db.run('PRAGMA foreign_keys = ON');
+  if (!url) {
+    throw new Error('TURSO_DATABASE_URL is not defined in environment variables');
+  }
+  const client = createClient({ url, authToken });
+  const db = createDbWrapper(client);
+  // PRAGMA foreign_keys = ON is usually default in LibSQL, but can be set
+  try {
+    await client.execute('PRAGMA foreign_keys = ON');
+  } catch (e) { /* ignore if not supported */ }
   return db;
 }
 
 module.exports = { initDb, getDb };
+
