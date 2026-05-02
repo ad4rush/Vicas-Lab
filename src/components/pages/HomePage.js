@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
-import { Box, Typography, Button, Container, Grid } from '@mui/material';
+import { Box, Typography, Button, Container } from '@mui/material';
 import {
   ArrowForward as ArrowIcon,
   Science as ScienceIcon,
   Lightbulb as IdeaIcon,
   Hub as HubIcon,
+  Email as EmailIcon,
+  OpenInNew as LinkIcon,
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import Slider from 'react-slick';
@@ -17,7 +19,7 @@ import main_3 from '../../Photos/main_3.jpeg';
 import main_4 from '../../Photos/main_4.jpeg';
 import Dr_Anuj_Grover from '../../Photos/Professor/Dr. Anuj Grover.jpeg';
 
-/* ─── DESIGN TOKENS (unchanged) ─────────────────────────── */
+/* ─── DESIGN TOKENS ─────────────────────────────────────────────── */
 const C = {
   white:    '#FFFFFF',
   navy:     '#0A2540',
@@ -33,7 +35,7 @@ const C = {
 
 const sysFont = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif";
 
-/* ─── STATIC DATA ────────────────────────────────────────── */
+/* ─── STATIC DATA ────────────────────────────────────────────────── */
 const STATS = [
   { value: '25+', label: 'Publications' },
   { value: '12',  label: 'Lab Members'  },
@@ -45,91 +47,112 @@ const RESEARCH = [
   {
     icon: <ScienceIcon />,
     title: 'In-Memory Compute',
-    desc:  'SRAM-based compute architectures that run edge-AI inference directly in memory, eliminating costly data-movement.',
+    desc: 'SRAM-based compute architectures that run edge-AI inference directly in memory, eliminating costly data-movement.',
   },
   {
     icon: <IdeaIcon />,
     title: 'Reliable Systems',
-    desc:  'Aging-aware designs and error-correction for long-term hardware stability across process corners and temperatures.',
+    desc: 'Aging-aware designs and error-correction for long-term hardware stability across process corners and temperatures.',
   },
   {
     icon: <HubIcon />,
     title: 'Edge Architectures',
-    desc:  'Ultra low-power VLSI circuits for IoT and wearable devices operating under tight energy and area budgets.',
+    desc: 'Ultra low-power VLSI circuits for IoT and wearable devices operating under tight energy and area budgets.',
   },
 ];
 
-/* ─── GLOBAL STYLES ──────────────────────────────────────── */
+/* ─── GLOBAL STYLES ──────────────────────────────────────────────── */
 const GlobalStyles = () => (
   <style>{`
     .slick-dots { bottom: 28px; }
-    .slick-dots li button:before { color: #fff !important; opacity: 0.4; font-size: 7px; }
+    .slick-dots li button:before { color: #fff !important; opacity: 0.35; font-size: 7px; }
     .slick-dots li.slick-active button:before { opacity: 1; }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0);    }
+    @keyframes heroFadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    .vicas-fade    { animation: fadeUp 0.6s ease both; }
-    .vicas-fade-d1 { animation-delay: 0.12s; }
-    .vicas-fade-d2 { animation-delay: 0.24s; }
+    @keyframes heroPulse {
+      0%, 100% { opacity: 0.04; }
+      50% { opacity: 0.08; }
+    }
+    .hero-fade { animation: heroFadeUp 0.7s ease both; }
+    .hero-fade-d1 { animation-delay: 0.15s; }
+    .hero-fade-d2 { animation-delay: 0.3s; }
+    .hero-fade-d3 { animation-delay: 0.45s; }
 
-    .research-panel {
-      padding: 40px 36px;
+    .research-card {
+      background: ${C.white};
+      border: 1px solid ${C.border};
+      border-radius: 16px;
+      padding: 40px 32px;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
       gap: 16px;
-      transition: background 0.2s ease;
+      height: 100%;
     }
-    .research-panel:hover { background: ${C.welcomeBg}; }
+    .research-card:hover {
+      box-shadow: 0 12px 32px rgba(10, 37, 64, 0.08);
+      border-color: ${C.sky};
+    }
+    .research-card:hover .rc-icon {
+      background: ${C.navy} !important;
+    }
+    .rc-icon {
+      transition: background 0.3s ease;
+    }
 
     .vicas-text-link {
       font-family: ${sysFont};
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       font-weight: 700;
       color: ${C.sky};
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      border-bottom: 1px solid transparent;
-      transition: border-color 0.18s;
+      border-bottom: 1.5px solid transparent;
+      transition: border-color 0.2s;
     }
     .vicas-text-link:hover { border-color: ${C.sky}; }
 
-    /*
-     * Transparent-header integration:
-     * In your Header/Navbar, listen for the 'vicas-hero-scroll' event:
-     *
-     *   window.addEventListener('vicas-hero-scroll', (e) => {
-     *     setIsTransparent(!e.detail.scrolled);  // your header state
-     *   });
-     *
-     * Apply:
-     *   bgcolor: isTransparent && isHomePage ? 'transparent' : C.navy
-     *   boxShadow: isTransparent ? 'none' : '0 2px 12px rgba(0,0,0,0.15)'
-     *   transition: 'background 0.35s ease, box-shadow 0.35s ease'
-     */
+    .stat-item {
+      text-align: center;
+      padding: 0 24px;
+    }
+
+    @media (max-width: 900px) {
+      .hero-content { text-align: center !important; }
+      .hero-buttons { justify-content: center !important; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
+      .about-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
+      .research-grid { grid-template-columns: 1fr !important; }
+      .director-inner { flex-direction: column !important; text-align: center !important; }
+      .director-img { margin: 0 auto !important; }
+      .director-info { align-items: center !important; }
+      .cta-buttons { flex-direction: column !important; align-items: center !important; }
+    }
+    @media (max-width: 600px) {
+      .stats-card { margin: 0 16px !important; }
+    }
   `}</style>
 );
 
-/* ─── REUSABLE ATOMS ─────────────────────────────────────── */
-const Eyebrow = ({ children, light = false, sx = {} }) => (
+/* ─── EYEBROW ATOM ───────────────────────────────────────────────── */
+const Eyebrow = ({ children, light = false, center = false }) => (
   <Typography sx={{
-    fontFamily: sysFont,
-    fontSize:   '0.68rem',
-    fontWeight: 700,
-    letterSpacing: '0.2em',
-    textTransform: 'uppercase',
-    color: light ? C.sky : C.sky,
-    mb: 2,
-    ...sx,
+    fontFamily: sysFont, fontSize: '0.7rem', fontWeight: 700,
+    letterSpacing: '0.2em', textTransform: 'uppercase',
+    color: C.sky, mb: 2, textAlign: center ? 'center' : 'left',
   }}>
     {children}
   </Typography>
 );
 
-/* ─── HERO ───────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 1 — HERO
+   ═══════════════════════════════════════════════════════════════════ */
 const HeroSection = ({ images }) => {
   const settings = {
     dots: true, infinite: true, speed: 1400, fade: true,
@@ -139,341 +162,399 @@ const HeroSection = ({ images }) => {
   };
 
   return (
-    <Box sx={{ height: '100vh', position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-      {/* Slider */}
-      <Slider {...settings} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-        {images.map((img, i) => (
-          <Box
-            key={i}
-            sx={{
+    <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+      {/* Hero area */}
+      <Box sx={{ height: { xs: '100vh', md: '100vh' }, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Background slider */}
+        <Slider {...settings} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }}>
+          {images.map((img, i) => (
+            <Box key={i} sx={{
               width: '100%', height: '100vh',
               backgroundImage: `url(${img})`,
               backgroundSize: 'cover', backgroundPosition: 'center',
-            }}
-          />
-        ))}
-      </Slider>
+            }} />
+          ))}
+        </Slider>
 
-      {/* Overlay — heavier on the left where text sits */}
-      <Box sx={{
-        position: 'absolute', inset: 0, zIndex: 1,
-        background: 'linear-gradient(105deg, rgba(6,22,38,0.92) 40%, rgba(6,22,38,0.52) 100%)',
-      }} />
+        {/* Dark overlay */}
+        <Box sx={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          background: 'linear-gradient(180deg, rgba(6,22,38,0.88) 0%, rgba(6,22,38,0.72) 50%, rgba(6,22,38,0.92) 100%)',
+        }} />
 
-      {/* Left accent line */}
-      <Box sx={{
-        position: 'absolute', left: 0, top: '15%', bottom: '15%',
-        width: '3px', bgcolor: C.sky, zIndex: 2,
-      }} />
+        {/* Decorative grid pattern */}
+        <Box sx={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+          animation: 'heroPulse 6s ease-in-out infinite',
+        }} />
 
-      <Container maxWidth="lg" sx={{ zIndex: 2, position: 'relative', pt: { xs: 10, md: 8 } }}>
-        <Box sx={{ maxWidth: '620px' }}>
-          <Eyebrow>IIIT Delhi — Department of ECE</Eyebrow>
+        {/* Content — centered */}
+        <Container maxWidth="md" sx={{ zIndex: 2, position: 'relative', textAlign: 'center' }}>
+          <Box className="hero-content">
+            <Typography className="hero-fade" sx={{
+              fontFamily: sysFont, fontSize: '0.7rem', fontWeight: 700,
+              letterSpacing: '0.25em', textTransform: 'uppercase',
+              color: C.sky, mb: 3,
+            }}>
+              IIIT Delhi — Department of ECE
+            </Typography>
 
-          <Typography
-            variant="h1"
-            className="vicas-fade"
-            sx={{
-              fontFamily:    sysFont,
-              fontWeight:    800,
-              color:         'white',
-              lineHeight:    1.06,
-              letterSpacing: '-0.025em',
-              fontSize:      { xs: '2.6rem', sm: '3.4rem', md: '4.2rem' },
+            <Typography variant="h1" className="hero-fade hero-fade-d1" sx={{
+              fontFamily: sysFont, fontWeight: 800, color: 'white',
+              lineHeight: 1.08, letterSpacing: '-0.03em',
+              fontSize: { xs: '2.4rem', sm: '3.2rem', md: '4.2rem' },
               mb: 3,
-            }}
-          >
-            VLSI Circuits<br />&amp; Systems Lab
+            }}>
+              VLSI Circuits<br />&amp; Systems Lab
+            </Typography>
+
+            <Box className="hero-fade hero-fade-d1" sx={{ width: 48, height: 3, bgcolor: C.sky, mx: 'auto', mb: 3, borderRadius: 2 }} />
+
+            <Typography className="hero-fade hero-fade-d2" sx={{
+              fontFamily: sysFont, color: 'rgba(255,255,255,0.7)',
+              fontSize: { xs: '0.95rem', md: '1.1rem' }, lineHeight: 1.8,
+              maxWidth: '520px', mx: 'auto', mb: 5,
+            }}>
+              Advancing ultra low-power in-memory compute, edge-AI acceleration,
+              and aging-resilient hardware security.
+            </Typography>
+
+            <Box className="hero-fade hero-fade-d3 hero-buttons" sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Button
+                component={Link} to="/research"
+                sx={{
+                  bgcolor: C.sky, color: 'white', borderRadius: '10px',
+                  fontFamily: sysFont, fontWeight: 700, textTransform: 'none',
+                  px: 4, py: 1.5, fontSize: '0.9rem',
+                  boxShadow: '0 4px 20px rgba(0,180,216,0.3)',
+                  '&:hover': { bgcolor: '#009eb5', boxShadow: '0 6px 28px rgba(0,180,216,0.4)' },
+                }}
+              >
+                Research Areas
+              </Button>
+              <Button
+                component={Link} to="/projects"
+                variant="outlined"
+                sx={{
+                  color: 'rgba(255,255,255,0.85)', borderColor: 'rgba(255,255,255,0.25)',
+                  borderRadius: '10px', fontFamily: sysFont, textTransform: 'none',
+                  px: 4, py: 1.5, fontSize: '0.9rem',
+                  '&:hover': { borderColor: 'white', color: 'white', bgcolor: 'rgba(255,255,255,0.06)' },
+                }}
+              >
+                Publications
+              </Button>
+            </Box>
+          </Box>
+        </Container>
+
+        {/* Scroll indicator */}
+        <Box sx={{
+          position: 'absolute', bottom: { xs: 90, md: 36 }, left: '50%',
+          transform: 'translateX(-50%)', zIndex: 2,
+          display: { xs: 'none', md: 'flex' }, flexDirection: 'column', alignItems: 'center', gap: 1,
+        }}>
+          <Typography sx={{ fontFamily: sysFont, fontSize: '0.58rem', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>
+            Scroll
           </Typography>
+          <Box sx={{ width: 1, height: 32, bgcolor: 'rgba(255,255,255,0.18)' }} />
+        </Box>
+      </Box>
 
-          <Box sx={{ width: 44, height: 2, bgcolor: C.sky, mb: 3 }} />
-
-          <Typography
-            className="vicas-fade vicas-fade-d1"
-            sx={{
-              fontFamily: sysFont,
-              color:      'rgba(255,255,255,0.78)',
-              fontSize:   { xs: '0.95rem', md: '1.05rem' },
-              lineHeight: 1.8,
-              mb: 5,
-              maxWidth: '480px',
-            }}
-          >
-            Advancing ultra low-power in-memory compute, edge-AI acceleration,
-            and aging-resilient hardware security.
-          </Typography>
-
-          <Box className="vicas-fade vicas-fade-d2" sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <Button
-              component={Link} to="/research"
-              sx={{
-                bgcolor: C.sky, color: 'white', borderRadius: '2px',
-                fontFamily: sysFont, fontWeight: 700, textTransform: 'none',
-                px: 3.5, py: 1.35, fontSize: '0.88rem',
-                '&:hover': { bgcolor: '#009eb5' },
-              }}
-            >
-              Research Areas
-            </Button>
-            <Button
-              component={Link} to="/projects"
-              variant="outlined"
-              sx={{
-                color: 'rgba(255,255,255,0.80)', borderColor: 'rgba(255,255,255,0.28)',
-                borderRadius: '2px', fontFamily: sysFont, textTransform: 'none',
-                px: 3.5, py: 1.35, fontSize: '0.88rem',
-                '&:hover': { borderColor: 'white', color: 'white', bgcolor: 'rgba(255,255,255,0.06)' },
-              }}
-            >
-              Publications
-            </Button>
+      {/* Floating stats card */}
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 3 }}>
+        <Box className="stats-card" sx={{
+          mt: { xs: -6, md: -7 },
+          mx: { xs: 2, md: 0 },
+          bgcolor: C.white,
+          borderRadius: '16px',
+          border: `1px solid ${C.border}`,
+          boxShadow: '0 16px 48px rgba(10,37,64,0.1)',
+          py: { xs: 4, md: 5 },
+          px: { xs: 2, md: 6 },
+        }}>
+          <Box className="stats-grid" sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 0,
+          }}>
+            {STATS.map((s, i) => (
+              <Box key={i} className="stat-item" sx={{
+                borderLeft: i > 0 ? { xs: 'none', md: `1px solid ${C.border}` } : 'none',
+                py: { xs: 1, md: 0 },
+              }}>
+                <Typography sx={{
+                  fontFamily: sysFont, fontWeight: 800, color: C.navy,
+                  fontSize: { xs: '1.8rem', md: '2.6rem' }, lineHeight: 1,
+                }}>
+                  {s.value}
+                </Typography>
+                <Typography sx={{
+                  fontFamily: sysFont, fontSize: '0.72rem', color: C.ink3,
+                  fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', mt: 1,
+                }}>
+                  {s.label}
+                </Typography>
+              </Box>
+            ))}
           </Box>
         </Box>
       </Container>
-
-      {/* Scroll hint */}
-      <Box sx={{
-        position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px',
-      }}>
-        <Typography sx={{ fontFamily: sysFont, fontSize: '0.6rem', letterSpacing: '0.18em', color: 'rgba(255,255,255,0.32)', textTransform: 'uppercase' }}>
-          Scroll
-        </Typography>
-        <Box sx={{ width: '1px', height: 34, bgcolor: 'rgba(255,255,255,0.2)' }} />
-      </Box>
     </Box>
   );
 };
 
-/* ─── STATS STRIP ────────────────────────────────────────── */
-const StatsStrip = () => (
-  <Box sx={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, py: { xs: 4.5, md: 5.5 }, bgcolor: 'white' }}>
-    <Container maxWidth="lg">
-      <Box sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-        gap: { xs: '32px 0', md: 0 },
-      }}>
-        {STATS.map((s, i) => (
-          <Box
-            key={i}
-            sx={{
-              textAlign: 'center',
-              borderLeft: {
-                xs: i % 2 !== 0   ? `1px solid ${C.border}` : 'none',
-                md: i > 0         ? `1px solid ${C.border}` : 'none',
-              },
-            }}
-          >
-            <Typography sx={{ fontFamily: sysFont, fontWeight: 800, color: C.navy, lineHeight: 1, fontSize: { xs: '2rem', md: '2.6rem' } }}>
-              {s.value}
-            </Typography>
-            <Typography sx={{ fontFamily: sysFont, fontSize: '0.7rem', color: C.ink3, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', mt: 1 }}>
-              {s.label}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-    </Container>
-  </Box>
-);
-
-/* ─── ABOUT + FACULTY ────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 2 — ABOUT
+   ═══════════════════════════════════════════════════════════════════ */
 const AboutSection = () => (
-  <Box sx={{ py: { xs: 9, md: 13 }, bgcolor: C.welcomeBg }}>
+  <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: C.white }}>
     <Container maxWidth="lg">
-      <Grid container spacing={{ xs: 6, md: 10 }} alignItems="center">
-
+      <Box className="about-grid" sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+        gap: { xs: 6, md: 10 },
+        alignItems: 'center',
+      }}>
         {/* Text */}
-        <Grid item xs={12} md={6}>
+        <Box>
           <Eyebrow>About the Lab</Eyebrow>
-          <Typography
-            variant="h2"
-            sx={{ fontFamily: sysFont, fontWeight: 800, color: C.navy, lineHeight: 1.18, fontSize: { xs: '1.75rem', md: '2.1rem' }, mb: 4 }}
-          >
+          <Typography variant="h2" sx={{
+            fontFamily: sysFont, fontWeight: 800, color: C.navy,
+            lineHeight: 1.15, fontSize: { xs: '1.75rem', md: '2.2rem' }, mb: 4,
+          }}>
             Where Circuits<br />Meet Intelligence
           </Typography>
-          <Typography sx={{ fontFamily: sysFont, fontSize: '0.97rem', lineHeight: 1.88, color: C.ink2, mb: 2.5 }}>
+          <Typography sx={{ fontFamily: sysFont, fontSize: '1rem', lineHeight: 1.85, color: C.ink2, mb: 2.5 }}>
             Located within IIIT Delhi's ECE department, the VICAS Lab is a focused research group
             working at the intersection of VLSI design, memory systems, and machine-learning hardware.
           </Typography>
-          <Typography sx={{ fontFamily: sysFont, fontSize: '0.97rem', lineHeight: 1.88, color: C.ink2, mb: 5 }}>
+          <Typography sx={{ fontFamily: sysFont, fontSize: '1rem', lineHeight: 1.85, color: C.ink2, mb: 5 }}>
             We design SRAM-based compute-in-memory circuits, study hardware reliability under aging,
             and build error-resilient architectures for resource-constrained edge deployments.
           </Typography>
           <Link to="/about" className="vicas-text-link">
             More about VICAS <ArrowIcon sx={{ fontSize: 14 }} />
           </Link>
-        </Grid>
+        </Box>
 
-        {/* Faculty card */}
-        <Grid item xs={12} md={6}>
-          <Box sx={{ bgcolor: 'white', border: `1px solid ${C.border}`, borderRadius: '4px', overflow: 'hidden' }}>
-            {/* Header band */}
-            <Box sx={{ bgcolor: C.navy, px: { xs: 3, md: 4 }, py: 2 }}>
-              <Typography sx={{ fontFamily: sysFont, fontSize: '0.63rem', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
-                Lab Director
-              </Typography>
-            </Box>
-
-            {/* Body */}
-            <Box sx={{ p: { xs: 3, md: 4 } }}>
-              <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', mb: 3.5 }}>
-                <img
-                  src={Dr_Anuj_Grover}
-                  alt="Dr. Anuj Grover"
-                  style={{ width: 80, height: 80, borderRadius: '4px', objectFit: 'cover', display: 'block', flexShrink: 0 }}
-                />
-                <Box>
-                  <Typography sx={{ fontFamily: sysFont, fontWeight: 800, color: C.navy, fontSize: '1.15rem', lineHeight: 1.2 }}>
-                    Dr. Anuj Grover
-                  </Typography>
-                  <Typography sx={{ fontFamily: sysFont, fontSize: '0.8rem', color: C.sky, fontWeight: 600, mt: 0.5, mb: 1 }}>
-                    Assistant Professor, ECE
-                  </Typography>
-                  <Typography sx={{ fontFamily: sysFont, fontSize: '0.8rem', color: C.ink3, lineHeight: 1.65 }}>
-                    IIIT Delhi, Okhla Phase III<br />New Delhi — 110020
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ borderTop: `1px solid ${C.border}`, pt: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {[
-                  { label: 'Email',   value: 'anuj@iiitd.ac.in',    href: 'mailto:anuj@iiitd.ac.in'      },
-                  { label: 'Profile', value: 'bit.ly/anuj-grover →', href: 'https://bit.ly/anuj-grover'  },
-                ].map((row) => (
-                  <Box key={row.label} sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                    <Typography sx={{ fontFamily: sysFont, fontSize: '0.72rem', color: C.ink3, minWidth: 50, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      {row.label}
-                    </Typography>
-                    <Typography
-                      component="a" href={row.href}
-                      target={row.href.startsWith('http') ? '_blank' : undefined}
-                      rel="noopener noreferrer"
-                      sx={{ fontFamily: sysFont, fontSize: '0.85rem', color: C.ink2, textDecoration: 'none', '&:hover': { color: C.sky } }}
-                    >
-                      {row.value}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
+        {/* Image composition */}
+        <Box sx={{ position: 'relative', height: { xs: 320, md: 420 } }}>
+          {/* Decorative bg rectangle */}
+          <Box sx={{
+            position: 'absolute', top: 20, right: 0, width: '85%', height: '85%',
+            bgcolor: C.bg, border: `1px solid ${C.border}`, borderRadius: '12px', zIndex: 0,
+          }} />
+          {/* Main image */}
+          <Box sx={{
+            position: 'absolute', top: 0, left: 0, width: '70%', height: '75%',
+            borderRadius: '12px', overflow: 'hidden', zIndex: 1,
+            boxShadow: '0 12px 40px rgba(10,37,64,0.12)',
+            border: `3px solid ${C.white}`,
+          }}>
+            <img src={main_1} alt="VICAS Lab" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </Box>
-        </Grid>
-      </Grid>
+          {/* Secondary image */}
+          <Box sx={{
+            position: 'absolute', bottom: 0, right: 0, width: '55%', height: '55%',
+            borderRadius: '12px', overflow: 'hidden', zIndex: 2,
+            boxShadow: '0 12px 40px rgba(10,37,64,0.15)',
+            border: `3px solid ${C.white}`,
+          }}>
+            <img src={main_3} alt="Lab team" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          </Box>
+          {/* Accent dot */}
+          <Box sx={{
+            position: 'absolute', top: -12, right: '40%', width: 24, height: 24,
+            bgcolor: C.sky, borderRadius: '50%', zIndex: 3, opacity: 0.6,
+          }} />
+        </Box>
+      </Box>
     </Container>
   </Box>
 );
 
-/* ─── RESEARCH AREAS ─────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 3 — RESEARCH
+   ═══════════════════════════════════════════════════════════════════ */
 const ResearchSection = () => (
-  <Box sx={{ py: { xs: 9, md: 13 }, bgcolor: 'white' }}>
+  <Box sx={{
+    py: { xs: 10, md: 14 },
+    background: `linear-gradient(180deg, ${C.bg} 0%, ${C.white} 100%)`,
+  }}>
     <Container maxWidth="lg">
-      <Box sx={{ mb: { xs: 6, md: 8 } }}>
-        <Eyebrow>What We Do</Eyebrow>
-        <Typography
-          variant="h2"
-          sx={{ fontFamily: sysFont, fontWeight: 800, color: C.navy, fontSize: { xs: '1.75rem', md: '2.1rem' } }}
-        >
+      <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
+        <Eyebrow center>What We Do</Eyebrow>
+        <Typography variant="h2" sx={{
+          fontFamily: sysFont, fontWeight: 800, color: C.navy,
+          fontSize: { xs: '1.75rem', md: '2.2rem' },
+        }}>
           Research Focus Areas
         </Typography>
       </Box>
 
-      {/* Single bordered container — all panels share one border, no mismatched card heights */}
-      <Box sx={{
+      <Box className="research-grid" sx={{
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-        border: `1px solid ${C.border}`,
-        borderRadius: '4px',
-        overflow: 'hidden',
+        gap: 3,
       }}>
         {RESEARCH.map((area, i) => (
-          <Box
-            key={i}
-            className="research-panel"
-            sx={{
-              borderRight: { xs: 'none', md: i < RESEARCH.length - 1 ? `1px solid ${C.border}` : 'none' },
-              borderBottom: { xs: i < RESEARCH.length - 1 ? `1px solid ${C.border}` : 'none', md: 'none' },
-            }}
-          >
-            <Box sx={{ color: C.sky }}>
+          <div key={i} className="research-card">
+            <Box className="rc-icon" sx={{
+              width: 52, height: 52, borderRadius: '14px',
+              bgcolor: 'rgba(0,180,216,0.1)', color: C.sky,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
               {React.cloneElement(area.icon, { sx: { fontSize: 26 } })}
             </Box>
-
-            <Typography sx={{ fontFamily: sysFont, fontWeight: 800, color: C.navy, fontSize: '1rem', lineHeight: 1.3 }}>
+            <Typography sx={{ fontFamily: sysFont, fontWeight: 800, color: C.navy, fontSize: '1.1rem' }}>
               {area.title}
             </Typography>
-
-            <Typography sx={{ fontFamily: sysFont, fontSize: '0.88rem', color: C.ink3, lineHeight: 1.75, flexGrow: 1 }}>
+            <Typography sx={{ fontFamily: sysFont, fontSize: '0.92rem', color: C.ink3, lineHeight: 1.75, flexGrow: 1 }}>
               {area.desc}
             </Typography>
-
-            <Link to="/research" className="vicas-text-link" style={{ marginTop: 6 }}>
+            <Link to="/research" className="vicas-text-link" style={{ marginTop: 8 }}>
               Learn more <ArrowIcon sx={{ fontSize: 13 }} />
             </Link>
-          </Box>
+          </div>
         ))}
       </Box>
     </Container>
   </Box>
 );
 
-/* ─── CTA BANNER ─────────────────────────────────────────── */
-const CtaSection = () => (
-  <Box sx={{ bgcolor: C.navy, py: { xs: 7, md: 9 } }}>
-    <Container maxWidth="lg">
-      <Grid container alignItems="center" spacing={{ xs: 4, md: 2 }}>
-        <Grid item xs={12} md={8}>
-          <Eyebrow>Archive</Eyebrow>
-          <Typography
-            variant="h3"
-            sx={{ fontFamily: sysFont, fontWeight: 800, color: 'white', fontSize: { xs: '1.5rem', md: '1.85rem' }, mb: 1 }}
-          >
-            Browse Publications &amp; Gallery
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 4 — DIRECTOR SPOTLIGHT
+   ═══════════════════════════════════════════════════════════════════ */
+const DirectorSection = () => (
+  <Box sx={{ py: { xs: 8, md: 10 }, bgcolor: C.navy, position: 'relative', overflow: 'hidden' }}>
+    {/* Decorative pattern */}
+    <Box sx={{
+      position: 'absolute', inset: 0,
+      backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)`,
+      backgroundSize: '32px 32px',
+    }} />
+
+    <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+      <Box className="director-inner" sx={{
+        display: 'flex', gap: { xs: 4, md: 6 },
+        alignItems: 'center',
+        bgcolor: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '20px',
+        p: { xs: 4, md: 6 },
+      }}>
+        {/* Photo */}
+        <Box className="director-img" sx={{ flexShrink: 0 }}>
+          <Box sx={{
+            width: { xs: 120, md: 150 }, height: { xs: 120, md: 150 },
+            borderRadius: '16px', overflow: 'hidden',
+            border: '2px solid rgba(255,255,255,0.15)',
+          }}>
+            <img src={Dr_Anuj_Grover} alt="Dr. Anuj Grover"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          </Box>
+        </Box>
+
+        {/* Info */}
+        <Box className="director-info" sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Typography sx={{
+            fontFamily: sysFont, fontSize: '0.68rem', fontWeight: 700,
+            letterSpacing: '0.2em', textTransform: 'uppercase', color: C.sky,
+          }}>
+            Lab Director
           </Typography>
-          <Typography sx={{ fontFamily: sysFont, color: 'rgba(255,255,255,0.45)', fontSize: '0.92rem' }}>
-            Explore our research output, lab photos, and ongoing projects.
+          <Typography sx={{ fontFamily: sysFont, fontWeight: 800, color: C.white, fontSize: { xs: '1.4rem', md: '1.8rem' }, lineHeight: 1.2 }}>
+            Dr. Anuj Grover
           </Typography>
-        </Grid>
-        <Grid item xs={12} md={4} sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
-          <Button
-            component={Link} to="/gallery"
-            sx={{
-              bgcolor: 'white', color: C.navy, borderRadius: '2px',
-              fontFamily: sysFont, fontWeight: 700, textTransform: 'none',
-              px: 3, py: 1.25, fontSize: '0.88rem',
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.88)' },
-            }}
-          >
-            Gallery
-          </Button>
-          <Button
-            component={Link} to="/research"
-            variant="outlined"
-            sx={{
-              color: 'rgba(255,255,255,0.75)', borderColor: 'rgba(255,255,255,0.22)',
-              borderRadius: '2px', fontFamily: sysFont, textTransform: 'none',
-              px: 3, py: 1.25, fontSize: '0.88rem',
-              '&:hover': { borderColor: 'white', color: 'white' },
-            }}
-          >
-            Publications
-          </Button>
-        </Grid>
-      </Grid>
+          <Typography sx={{ fontFamily: sysFont, fontSize: '0.95rem', color: 'rgba(255,255,255,0.55)', fontWeight: 500, lineHeight: 1.6 }}>
+            Assistant Professor, ECE — IIIT Delhi, Okhla Phase III, New Delhi — 110020
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', mt: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <EmailIcon sx={{ fontSize: 16, color: C.sky }} />
+              <Typography component="a" href="mailto:anuj@iiitd.ac.in" sx={{
+                fontFamily: sysFont, fontSize: '0.88rem', color: 'rgba(255,255,255,0.7)',
+                textDecoration: 'none', '&:hover': { color: C.sky },
+              }}>
+                anuj@iiitd.ac.in
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LinkIcon sx={{ fontSize: 16, color: C.sky }} />
+              <Typography component="a" href="https://bit.ly/anuj-grover" target="_blank" rel="noopener noreferrer" sx={{
+                fontFamily: sysFont, fontSize: '0.88rem', color: 'rgba(255,255,255,0.7)',
+                textDecoration: 'none', '&:hover': { color: C.sky },
+              }}>
+                Faculty Profile →
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
     </Container>
   </Box>
 );
 
-/* ─── ROOT ───────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 5 — CTA BANNER
+   ═══════════════════════════════════════════════════════════════════ */
+const CtaSection = () => (
+  <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: C.white, textAlign: 'center' }}>
+    <Container maxWidth="md">
+      <Eyebrow center>Archive</Eyebrow>
+      <Typography variant="h3" sx={{
+        fontFamily: sysFont, fontWeight: 800, color: C.navy,
+        fontSize: { xs: '1.5rem', md: '2rem' }, mb: 2,
+      }}>
+        Browse Publications &amp; Gallery
+      </Typography>
+      <Typography sx={{
+        fontFamily: sysFont, color: C.ink3, fontSize: '1rem', mb: 5,
+        maxWidth: '480px', mx: 'auto', lineHeight: 1.7,
+      }}>
+        Explore our research output, lab photos, and ongoing projects.
+      </Typography>
+
+      <Box className="cta-buttons" sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <Button
+          component={Link} to="/gallery"
+          sx={{
+            bgcolor: C.navy, color: C.white, borderRadius: '10px',
+            fontFamily: sysFont, fontWeight: 700, textTransform: 'none',
+            px: 4, py: 1.5, fontSize: '0.9rem',
+            '&:hover': { bgcolor: C.navyDark },
+          }}
+        >
+          View Gallery
+        </Button>
+        <Button
+          component={Link} to="/research"
+          variant="outlined"
+          sx={{
+            color: C.navy, borderColor: C.navy, borderRadius: '10px',
+            fontFamily: sysFont, fontWeight: 700, textTransform: 'none',
+            px: 4, py: 1.5, fontSize: '0.9rem',
+            '&:hover': { bgcolor: C.navy, color: C.white, borderColor: C.navyDark },
+          }}
+        >
+          Publications
+        </Button>
+      </Box>
+    </Container>
+  </Box>
+);
+
+/* ═══════════════════════════════════════════════════════════════════
+   ROOT
+   ═══════════════════════════════════════════════════════════════════ */
 const HomePage = () => {
   const galleryImages = [main_1, main_2, main_3, main_4];
 
-  /*
-   * Fires a custom DOM event on every scroll tick.
-   * Your Navbar component can listen to 'vicas-hero-scroll'
-   * and switch between transparent ↔ navy based on e.detail.scrolled.
-   */
   useEffect(() => {
     const dispatch = () =>
       window.dispatchEvent(
@@ -485,13 +566,13 @@ const HomePage = () => {
   }, []);
 
   return (
-    <Box sx={{ bgcolor: 'white', color: C.ink, fontFamily: sysFont }}>
+    <Box sx={{ bgcolor: C.white, color: C.ink, fontFamily: sysFont }}>
       <GlobalStyles />
-      <HeroSection  images={galleryImages} />
-      <StatsStrip   />
+      <HeroSection images={galleryImages} />
       <AboutSection />
       <ResearchSection />
-      <CtaSection   />
+      <DirectorSection />
+      <CtaSection />
     </Box>
   );
 };
