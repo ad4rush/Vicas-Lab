@@ -12,7 +12,7 @@ const uploadLimiter = rateLimit({
 });
 
 // ─── Public Endpoints ──────────────────────────────────────────
-router.get('/:type(project|news|achievement)', cc.getApprovedContent);
+router.get('/:type(project|news|achievement|research)', cc.getApprovedContent);
 
 // ─── Authenticated Endpoints ───────────────────────────────────
 router.post('/upload', authenticateToken, uploadLimiter, cc.uploadContent);

@@ -8,7 +8,9 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.3",
     "bcrypt": "^5.1.0",
+    "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

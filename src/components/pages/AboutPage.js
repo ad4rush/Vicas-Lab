@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography, Container } from '@mui/material';
 import Amit_Kumar_Ratrey from '../../Photos/Student/Amit Kumar Ratrey.jpeg';
 import Anuj_Grover_Profile from '../../Photos/Student/Anuj Grover.jpeg'; 
 import Anushree_Vardish from '../../Photos/Student/Anushree Vardish.jpeg';
@@ -36,21 +36,44 @@ const C = {
 
 const sysFont = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif";
 
-/* ─── GLOBAL STYLES INJECTION ───────────────────────────────────── */
 const GlobalStyles = () => (
   <style>{`
+    @keyframes heroFadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroPulse {
+      0%, 100% { opacity: 0.04; }
+      50% { opacity: 0.08; }
+    }
+    .hero-fade { animation: heroFadeUp 0.7s ease both; }
+    .hero-fade-d1 { animation-delay: 0.15s; }
+    .hero-fade-d2 { animation-delay: 0.3s; }
+
     .vicas-member-card {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: default;
-      border-radius: 8px;
+      background: ${C.white};
+      border: 1px solid ${C.border};
+      border-radius: 16px;
+      padding: 32px 24px;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      height: 100%;
     }
     .vicas-member-card:hover {
-      border-color: ${C.sky} !important;
-      transform: translateY(-6px);
-      box-shadow: 0 16px 48px rgba(10, 37, 64, 0.1);
+      box-shadow: 0 12px 32px rgba(10, 37, 64, 0.08);
+      border-color: ${C.sky};
+      transform: translateY(-4px);
+    }
+    .vicas-member-avatar {
+      transition: all 0.3s ease;
+      border: 2px solid ${C.border};
     }
     .vicas-member-card:hover .vicas-member-avatar {
       border-color: ${C.sky} !important;
+      transform: scale(1.05);
     }
 
     @media (max-width: 1024px) {
@@ -59,6 +82,8 @@ const GlobalStyles = () => (
     }
     @media (max-width: 768px) {
       .vicas-about-grid { grid-template-columns: 1fr !important; }
+      .director-inner { flex-direction: column !important; text-align: center !important; }
+      .director-info { align-items: center !important; }
     }
   `}</style>
 );
@@ -118,43 +143,30 @@ const SectionTitle = ({ children, style = {} }) => (
 );
 
 const MemberCard = ({ member, size = 'large' }) => (
-  <div className="vicas-member-card" style={{
-    background: C.white,
-    border: `1px solid ${C.border}`,
-    padding: size === 'large' ? '40px' : '24px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    height: '100%',
-  }}>
+  <div className="vicas-member-card">
     <div className="vicas-member-avatar" style={{
-      width: size === 'large' ? '120px' : '90px',
-      height: size === 'large' ? '120px' : '90px',
-      border: `1px solid ${C.border}`,
+      width: size === 'large' ? '110px' : '85px',
+      height: size === 'large' ? '110px' : '85px',
       borderRadius: '50%',
-      padding: '4px',
       overflow: 'hidden',
       marginBottom: '20px',
-      transition: 'all 0.3s ease',
     }}>
-      <img src={member.img} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+      <img src={member.img} alt={member.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
     </div>
-    <h3 style={{
+    <Typography sx={{
       fontFamily: sysFont,
-      fontSize: size === 'large' ? '1.25rem' : '1.1rem',
+      fontSize: size === 'large' ? '1.15rem' : '1rem',
       fontWeight: 700, color: C.navy,
-      margin: '0 0 6px 0'
-    }}>{member.name}</h3>
-    <p style={{
+      lineHeight: 1.2, mb: 0.5
+    }}>{member.name}</Typography>
+    <Typography sx={{
       fontFamily: sysFont,
-      fontSize: '0.7rem',
+      fontSize: '0.65rem',
       fontWeight: 700,
       color: C.sky,
-      letterSpacing: '0.05em',
+      letterSpacing: '0.1em',
       textTransform: 'uppercase',
-      margin: 0
-    }}>{member.title}</p>
+    }}>{member.title}</Typography>
   </div>
 );
 
@@ -165,96 +177,130 @@ const AboutPage = () => {
       <GlobalStyles />
 
       {/* Hero */}
-      <section style={{ position: 'relative', height: '60vh', minHeight: '450px', display: 'flex', alignItems: 'center', paddingTop: '80px' }}>
+      <section style={{ position: 'relative', height: '60vh', minHeight: '480px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        {/* Background image */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 0, backgroundImage: `url(${main_3})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundColor: 'rgba(10, 37, 64, 0.8)' }} />
-        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px', background: C.sky, zIndex: 3 }} />
+        
+        {/* Dark overlay — Same as Home */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          background: 'linear-gradient(180deg, rgba(6,22,38,0.88) 0%, rgba(6,22,38,0.72) 50%, rgba(6,22,38,0.92) 100%)',
+        }} />
 
-        <div style={{ position: 'relative', zIndex: 2, padding: '0 clamp(32px, 7vw, 100px)', maxWidth: '900px' }}>
-          <SectionLabel>Network & Collaborations</SectionLabel>
-          <h1 style={{
-            fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+        {/* Decorative grid pattern — Same as Home */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+          animation: 'heroPulse 6s ease-in-out infinite',
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 2, padding: '0 24px', textAlign: 'center', maxWidth: '900px' }}>
+          <div className="hero-fade">
+            <SectionLabel>Network & Collaborations</SectionLabel>
+          </div>
+          <h1 className="hero-fade hero-fade-d1" style={{
+            fontFamily: sysFont,
+            fontSize: 'clamp(2.4rem, 6vw, 4.2rem)',
             fontWeight: 800, color: '#FFFFFF',
-            lineHeight: 1.1, margin: '0 0 24px 0'
-          }}>About the<br />VICAS Lab</h1>
-          <p style={{ fontSize: '1.2rem', lineHeight: 1.6, color: 'rgba(255,255,255,0.8)', fontWeight: 400, margin: 0, maxWidth: '580px' }}>
+            lineHeight: 1.08, letterSpacing: '-0.03em',
+            margin: '0 0 24px 0'
+          }}>
+            About the<br />VICAS Lab
+          </h1>
+          <div className="hero-fade hero-fade-d1" style={{ width: 48, height: 3, background: C.sky, margin: '0 auto 32px', borderRadius: 2 }} />
+          <p className="hero-fade hero-fade-d2" style={{ 
+            fontFamily: sysFont, fontSize: '1.1rem', lineHeight: 1.7, 
+            color: 'rgba(255,255,255,0.75)', fontWeight: 400, margin: '0 auto', maxWidth: '600px' 
+          }}>
             A multidisciplinary research group at IIIT Delhi dedicated to pioneering efficient hardware systems and low-power VLSI circuitry.
           </p>
         </div>
       </section>
 
       {/* Mission */}
-      <section style={{ padding: '100px 0', background: C.white }}>
-        <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '0 clamp(24px, 5vw, 64px)' }}>
-          <div className="vicas-welcome-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '100px', alignItems: 'start' }}>
-            
+      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: C.white }}>
+        <Container maxWidth="lg">
+          <Box className="vicas-welcome-grid" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: { xs: 6, md: 10 }, alignItems: 'center' }}>
             <div>
               <SectionLabel>Our Mission</SectionLabel>
               <SectionTitle>Pioneering the Future of VLSI</SectionTitle>
-              <div style={{ width: '40px', height: '4px', background: C.sky, margin: '24px 0 32px 0' }} />
-              <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: C.ink2, margin: '0 0 24px 0' }}>
+              <Box sx={{ width: 40, height: 4, bgcolor: C.sky, my: 4, borderRadius: 2 }} />
+              <Typography sx={{ fontSize: '1.05rem', lineHeight: 1.8, color: C.ink2, mb: 3 }}>
                 The VLSI Circuits and Systems (VICAS) Lab in the Department of Electronics and Communication Engineering at IIIT Delhi is dedicated to cutting-edge research in hardware design. Our work addresses the critical challenges of energy efficiency, reliability, and security in modern computing paradigms.
-              </p>
-              <p style={{ fontSize: '1.1rem', lineHeight: 1.8, color: C.ink2, margin: 0 }}>
-                From modeling aging effects like NBTI and HCI to innovating sub-threshold SRAM architectures and processing-in-memory (PIM) concepts, our group strives to make intelligent edge devices a reality. We are situated in A-613 of the R&D block at IIIT Delhi.
-              </p>
+              </Typography>
+              <Typography sx={{ fontSize: '1.05rem', lineHeight: 1.8, color: C.ink2 }}>
+                From modeling aging effects to innovating sub-threshold SRAM architectures and processing-in-memory (PIM) concepts, our group strives to make intelligent edge devices a reality.
+              </Typography>
             </div>
+            <Box sx={{ position: 'relative', height: { xs: 300, md: 400 } }}>
+               <Box sx={{ position: 'absolute', top: 20, right: 0, width: '85%', height: '85%', bgcolor: C.bg, border: `1px solid ${C.border}`, borderRadius: '12px', zIndex: 0 }} />
+               <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '12px', overflow: 'hidden', zIndex: 1, boxShadow: '0 12px 40px rgba(10,37,64,0.12)', border: `3px solid ${C.white}` }}>
+                 <img src={main_3} alt="VICAS Lab" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+               </Box>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
 
-            {/* Principal Investigator */}
-            <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '56px 40px', textAlign: 'center' }}>
-              <div style={{ width: '150px', height: '150px', margin: '0 auto 28px', border: `1px solid ${C.border}`, padding: '4px', borderRadius: '50%', overflow: 'hidden' }}>
-                <img src={TEAM.director.img} alt={TEAM.director.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-              </div>
-              <SectionLabel>Director</SectionLabel>
-              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: C.navy, margin: '0 0 8px 0' }}>{TEAM.director.name}</h3>
-              <p style={{ fontSize: '1rem', color: C.ink3, fontWeight: 500, mb: 4 }}>{TEAM.director.role}</p>
-              <div style={{ borderTop: `1px solid ${C.border}`, margin: '24px auto', width: '40px' }} />
-              <p style={{ fontSize: '0.95rem', color: C.ink2, lineHeight: 1.6, fontStyle: 'italic' }}>"{TEAM.director.desc}"</p>
-            </div>
-
-          </div>
-        </div>
-      </section>
+      {/* Principal Investigator — Home style */}
+      <Box sx={{ py: { xs: 10, md: 12 }, bgcolor: C.navy, position: 'relative', overflow: 'hidden' }}>
+        <Box sx={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)`, backgroundSize: '32px 32px' }} />
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+          <Box className="director-inner" sx={{
+            display: 'flex', gap: { xs: 4, md: 6 }, alignItems: 'center',
+            bgcolor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', p: { xs: 4, md: 6 }
+          }}>
+            <Box sx={{ flexShrink: 0 }}>
+              <Box sx={{ width: { xs: 120, md: 160 }, height: { xs: 120, md: 160 }, borderRadius: '16px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.15)' }}>
+                <img src={TEAM.director.img} alt={TEAM.director.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </Box>
+            </Box>
+            <Box className="director-info" sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              <SectionLabel>Lab Director</SectionLabel>
+              <Typography sx={{ fontFamily: sysFont, fontWeight: 800, color: C.white, fontSize: { xs: '1.5rem', md: '2rem' }, lineHeight: 1.2 }}>
+                {TEAM.director.name}
+              </Typography>
+              <Typography sx={{ fontFamily: sysFont, fontSize: '1rem', color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
+                {TEAM.director.role}
+              </Typography>
+              <Typography sx={{ fontFamily: sysFont, fontSize: '1.05rem', color: 'rgba(255,255,255,0.8)', lineHeight: 1.7, fontStyle: 'italic', mt: 1 }}>
+                "{TEAM.director.desc}"
+              </Typography>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
 
       {/* Faculty */}
-      <section style={{ padding: '100px 0', background: C.bg, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '0 clamp(24px, 5vw, 64px)' }}>
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
-            <SectionLabel>Network</SectionLabel>
+      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: C.bg, borderTop: `1px solid ${C.border}` }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
+            <SectionLabel>Collaborations</SectionLabel>
             <SectionTitle>Faculty Collaborators</SectionTitle>
           </Box>
-
-          <div className="vicas-about-grid" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: '32px' 
-          }}>
+          <Box className="vicas-about-grid" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3 }}>
             {TEAM.faculty.map((f, i) => (
               <MemberCard key={i} member={f} size="large" />
             ))}
-          </div>
-        </div>
-      </section>
+          </Box>
+        </Container>
+      </Box>
 
       {/* Students */}
-      <section style={{ padding: '100px 0', background: C.white }}>
-        <div style={{ maxWidth: '1300px', margin: '0 auto', padding: '0 clamp(24px, 5vw, 64px)' }}>
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
+      <Box sx={{ py: { xs: 10, md: 14 }, bgcolor: C.white }}>
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
             <SectionLabel>The Group</SectionLabel>
             <SectionTitle>Research Students</SectionTitle>
           </Box>
-
-          <div className="vicas-about-grid" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(5, 1fr)', 
-            gap: '24px' 
-          }}>
+          <Box className="vicas-about-grid" sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }, gap: 2.5 }}>
             {TEAM.students.map((s, i) => (
               <MemberCard key={i} member={s} size="small" />
             ))}
-          </div>
-        </div>
-      </section>
+          </Box>
+        </Container>
+      </Box>
 
     </div>
   );

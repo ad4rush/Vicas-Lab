@@ -49,35 +49,43 @@ const SectionTitle = ({ children, style = {} }) => (
 
 const GlobalStyles = () => (
   <style>{`
+    @keyframes heroFadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroPulse {
+      0%, 100% { opacity: 0.04; }
+      50% { opacity: 0.08; }
+    }
+    .hero-fade { animation: heroFadeUp 0.7s ease both; }
+    .hero-fade-d1 { animation-delay: 0.15s; }
+    .hero-fade-d2 { animation-delay: 0.3s; }
+
     .vicas-pub-card {
-      padding: 32px 0;
-      border-bottom: 1px solid ${C.border};
+      padding: 32px 24px;
+      border: 1px solid ${C.border};
+      border-radius: 12px;
+      background: ${C.white};
+      margin-bottom: 16px;
       display: grid;
-      grid-template-columns: 100px 1fr;
-      gap: 32px;
-      transition: all 0.2s ease;
+      grid-template-columns: 80px 1fr;
+      gap: 24px;
+      transition: all 0.3s ease;
       cursor: pointer;
     }
     .vicas-pub-card:hover {
-      background: ${C.bg};
-      padding-left: 20px;
-    }
-    .vicas-pub-card:last-child {
-      border-bottom: none;
+      border-color: ${C.sky};
+      box-shadow: 0 4px 20px rgba(10, 37, 64, 0.05);
     }
 
     .vicas-filter-form .MuiOutlinedInput-root {
-      border-radius: 4px;
+      border-radius: 8px;
       background: ${C.white};
       font-family: ${sysFont};
       font-size: 13px;
-      font-weight: 500;
     }
     .vicas-filter-form .MuiOutlinedInput-notchedOutline {
       border-color: ${C.border};
-    }
-    .vicas-filter-form .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-      border-color: ${C.navy};
     }
     .vicas-filter-form .MuiInputLabel-root {
       font-family: ${sysFont};
@@ -162,16 +170,36 @@ const ResearchPage = () => {
       <GlobalStyles />
 
       {/* Hero */}
-      <section style={{ position: 'relative', height: '45vh', minHeight: '350px', display: 'flex', alignItems: 'center', paddingTop: '80px' }}>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0, backgroundImage: `url(${main_2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundColor: 'rgba(10, 37, 64, 0.85)' }} />
-        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '6px', background: C.sky, zIndex: 3 }} />
+      <Box sx={{ position: 'relative', height: '45vh', minHeight: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <Box sx={{ position: 'absolute', inset: 0, zIndex: 0, backgroundImage: `url(${main_2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         
-        <div style={{ position: 'relative', zIndex: 2, padding: '0 clamp(24px, 5vw, 64px)', maxWidth: '850px' }}>
-          <SectionLabel>Academic Archive</SectionLabel>
-          <h1 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', fontWeight: 800, color: '#fff', margin: 0, lineHeight: 1.1 }}>Research &<br />Publications</h1>
-        </div>
-      </section>
+        {/* Dark overlay — Same as Home */}
+        <Box sx={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          background: 'linear-gradient(180deg, rgba(6,22,38,0.88) 0%, rgba(6,22,38,0.72) 50%, rgba(6,22,38,0.92) 100%)',
+        }} />
+
+        {/* Decorative grid pattern — Same as Home */}
+        <Box sx={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px',
+          animation: 'heroPulse 6s ease-in-out infinite',
+        }} />
+        
+        <Box sx={{ position: 'relative', zIndex: 2, padding: '0 24px', textAlign: 'center', maxWidth: '850px' }}>
+          <Box className="hero-fade">
+            <SectionLabel>Academic Archive</SectionLabel>
+          </Box>
+          <Typography variant="h1" className="hero-fade hero-fade-d1" sx={{ 
+            fontSize: 'clamp(2.2rem, 6vw, 3.8rem)', fontWeight: 800, color: '#fff', 
+            lineHeight: 1.1, mb: 3, letterSpacing: '-0.02em' 
+          }}>
+            Research &<br />Publications
+          </Typography>
+          <Box className="hero-fade hero-fade-d1" sx={{ width: 48, height: 3, bgcolor: C.sky, mx: 'auto', borderRadius: 2 }} />
+        </Box>
+      </Box>
 
       {/* Filters */}
       <section style={{ background: C.bg, borderBottom: `1px solid ${C.border}`, padding: '48px 0' }}>
@@ -205,33 +233,41 @@ const ResearchPage = () => {
       {/* Publications List */}
       <section style={{ padding: '80px 0', minHeight: '500px' }}>
         <Container maxWidth="lg">
-          <div style={{ marginBottom: '48px' }}>
+          <Box sx={{ mb: 6 }}>
             <SectionLabel>Records</SectionLabel>
             <SectionTitle>Publication Archive — {filteredPublications.length} Results</SectionTitle>
-          </div>
+          </Box>
 
-          <div style={{ borderTop: `1px solid ${C.border}` }}>
+          <Box sx={{ mt: 4 }}>
             {loading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                 <CircularProgress sx={{ color: C.navy }} />
               </Box>
             ) : filteredPublications.map((pub) => (
-              <div key={pub.id} className="vicas-pub-card" onClick={() => handleOpen(pub)}>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: C.navy }}>
+              <Box key={pub.id} className="vicas-pub-card" onClick={() => handleOpen(pub)}>
+                <Typography sx={{ fontSize: '1.4rem', fontWeight: 800, color: C.navy, textAlign: 'center', opacity: 0.8 }}>
                   {pub.year}
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: C.ink, lineHeight: 1.4, margin: '0 0 12px 0' }}>{pub.title}</h3>
-                  <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <p style={{ fontSize: '0.8rem', fontWeight: 700, color: C.sky, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>{pub.author}</p>
-                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: C.border }} />
-                    <p style={{ fontSize: '0.95rem', color: C.ink3, fontStyle: 'italic', margin: 0 }}>{pub.journal}</p>
-                    <Box sx={{ ml: 'auto', bgcolor: C.bg, border: `1px solid ${C.border}`, px: 1.5, py: 0.5, borderRadius: '4px', fontSize: '11px', fontWeight: 700, color: C.navy, textTransform: 'uppercase' }}>{pub.topic}</Box>
-                  </div>
-                </div>
-              </div>
+                </Typography>
+                <Box>
+                  <Typography variant="h3" sx={{ fontSize: '1.15rem', fontWeight: 700, color: C.ink, lineHeight: 1.4, mb: 1 }}>
+                    {pub.title}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 700, color: C.sky, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {pub.author}
+                    </Typography>
+                    <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: C.border }} />
+                    <Typography sx={{ fontSize: '0.9rem', color: C.ink3, fontStyle: 'italic' }}>
+                      {pub.journal}
+                    </Typography>
+                    <Box sx={{ ml: 'auto', bgcolor: C.bg, border: `1px solid ${C.border}`, px: 1.2, py: 0.4, borderRadius: '4px', fontSize: '10px', fontWeight: 700, color: C.navy, textTransform: 'uppercase' }}>
+                      {pub.topic}
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
             ))}
-          </div>
+          </Box>
 
           {!loading && filteredPublications.length === 0 && (
             <Box sx={{ textAlign: 'center', py: 12 }}>

@@ -37,7 +37,7 @@ async function uploadContent(req, res) {
   const { type, title, description, fileName, fileData, pdfName, pdfData, metadata } = req.body;
   const user = req.user;
 
-  if (!type || !['project', 'news', 'achievement'].includes(type)) {
+  if (!type || !['project', 'news', 'achievement', 'research'].includes(type)) {
     return res.status(400).json({ error: 'Invalid or missing content type' });
   }
   if (!title) {

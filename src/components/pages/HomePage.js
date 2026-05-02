@@ -35,13 +35,7 @@ const C = {
 
 const sysFont = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif";
 
-/* ─── STATIC DATA ────────────────────────────────────────────────── */
-const STATS = [
-  { value: '25+', label: 'Publications' },
-  { value: '12',  label: 'Lab Members'  },
-  { value: '8',   label: 'Live Projects'},
-  { value: '6+',  label: 'Years Active' },
-];
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000';
 
 const RESEARCH = [
   {
@@ -250,56 +244,140 @@ const HeroSection = ({ images }) => {
           </Box>
         </Container>
 
-        {/* Scroll indicator */}
-        <Box sx={{
-          position: 'absolute', bottom: { xs: 90, md: 36 }, left: '50%',
-          transform: 'translateX(-50%)', zIndex: 2,
-          display: { xs: 'none', md: 'flex' }, flexDirection: 'column', alignItems: 'center', gap: 1,
-        }}>
-          <Typography sx={{ fontFamily: sysFont, fontSize: '0.58rem', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>
-            Scroll
-          </Typography>
-          <Box sx={{ width: 1, height: 32, bgcolor: 'rgba(255,255,255,0.18)' }} />
-        </Box>
       </Box>
 
-      {/* Floating stats card */}
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 3 }}>
-        <Box className="stats-card" sx={{
-          mt: { xs: -6, md: -7 },
-          mx: { xs: 2, md: 0 },
-          bgcolor: C.white,
-          borderRadius: '16px',
-          border: `1px solid ${C.border}`,
-          boxShadow: '0 16px 48px rgba(10,37,64,0.1)',
-          py: { xs: 4, md: 5 },
-          px: { xs: 2, md: 6 },
-        }}>
-          <Box className="stats-grid" sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 0,
-          }}>
-            {STATS.map((s, i) => (
-              <Box key={i} className="stat-item" sx={{
-                borderLeft: i > 0 ? { xs: 'none', md: `1px solid ${C.border}` } : 'none',
-                py: { xs: 1, md: 0 },
-              }}>
-                <Typography sx={{
-                  fontFamily: sysFont, fontWeight: 800, color: C.navy,
-                  fontSize: { xs: '1.8rem', md: '2.6rem' }, lineHeight: 1,
-                }}>
-                  {s.value}
-                </Typography>
-                <Typography sx={{
-                  fontFamily: sysFont, fontSize: '0.72rem', color: C.ink3,
-                  fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', mt: 1,
-                }}>
-                  {s.label}
-                </Typography>
-              </Box>
-            ))}
+    </Box>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 1.5 — LATEST UPDATES (Dynamic)
+   ═══════════════════════════════════════════════════════════════════ */
+const LatestUpdatesSection = () => {
+  const [updates, setUpdates] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  useEffect(() => {
+    const fetchUpdates = async () => {
+      try {
+        const [newsRes, achRes] = await Promise.all([
+          fetch(`${API_BASE}/api/content/news`),
+          fetch(`${API_BASE}/api/content/achievement`)
+        ]);
+        const newsData = await newsRes.json();
+        const achData = await achRes.json();
+        
+        let combined = [];
+        if (newsRes.ok && newsData.items) {
+          combined = [...combined, ...newsData.items.map(i => ({ ...i, type: 'news' }))];
+        }
+        if (achRes.ok && achData.items) {
+          combined = [...combined, ...achData.items.map(i => ({ ...i, type: 'achievement' }))];
+        }
+        
+        // Sort by date (descending)
+        combined.sort((a, b) => {
+          const dateA = new Date(a.metadata?.date || a.created_at);
+          const dateB = new Date(b.metadata?.date || b.created_at);
+          return dateB - dateA;
+        });
+        
+        setUpdates(combined.slice(0, 3));
+      } catch (err) {
+        console.error("Failed to fetch updates", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUpdates();
+  }, []);
+
+  if (loading || updates.length === 0) return null;
+
+  return (
+    <Box sx={{ 
+      py: { xs: 8, md: 10 }, 
+      bgcolor: C.bg, 
+      borderBottom: `1px solid ${C.border}`,
+      position: 'relative' 
+    }}>
+      <Container maxWidth="lg">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 5 }}>
+          <Box>
+            <Eyebrow>Latest Updates</Eyebrow>
+            <Typography variant="h3" sx={{ 
+              fontFamily: sysFont, fontWeight: 800, color: C.navy,
+              fontSize: { xs: '1.75rem', md: '2.2rem' }
+            }}>
+              Lab News & Achievements
+            </Typography>
           </Box>
+          <Button 
+            component={Link} to="/news"
+            endIcon={<ArrowIcon sx={{ fontSize: 16 }} />}
+            sx={{ 
+              textTransform: 'none', fontWeight: 700, color: C.sky,
+              fontFamily: sysFont, mb: 1,
+              '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' }
+            }}
+          >
+            See all
+          </Button>
+        </Box>
+
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+          gap: 3 
+        }}>
+          {updates.map((item, i) => {
+            const date = new Date(item.metadata?.date || item.created_at).toLocaleDateString('en-US', {
+              month: 'short', day: 'numeric', year: 'numeric'
+            });
+            return (
+              <Box key={i} sx={{ 
+                bgcolor: C.white, p: 3, borderRadius: '16px',
+                border: `1px solid ${C.border}`,
+                transition: 'all 0.3s ease',
+                display: 'flex', flexDirection: 'column',
+                '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 12px 32px rgba(10,37,64,0.08)', borderColor: C.sky }
+              }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography sx={{ 
+                    fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
+                    color: item.type === 'achievement' ? '#F59E0B' : C.sky,
+                    textTransform: 'uppercase', bgcolor: item.type === 'achievement' ? 'rgba(245,158,11,0.1)' : 'rgba(0,180,216,0.1)',
+                    px: 1.2, py: 0.4, borderRadius: '4px'
+                  }}>
+                    {item.type === 'achievement' ? 'Achievement' : 'News'}
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.75rem', color: C.ink3, fontWeight: 500 }}>
+                    {date}
+                  </Typography>
+                </Box>
+                <Typography sx={{ 
+                  fontFamily: sysFont, fontWeight: 700, color: C.navy, 
+                  fontSize: '1.05rem', mb: 1.5, lineHeight: 1.4,
+                  display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                }}>
+                  {item.title}
+                </Typography>
+                <Typography sx={{ 
+                  fontFamily: sysFont, color: C.ink2, fontSize: '0.9rem', 
+                  lineHeight: 1.6, mb: 2, flexGrow: 1,
+                  display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden'
+                }}>
+                  {item.description}
+                </Typography>
+                <Link to="/news" style={{ 
+                  color: C.sky, fontSize: '0.85rem', fontWeight: 700, 
+                  textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' 
+                }}>
+                  Read more <ArrowIcon sx={{ fontSize: 14 }} />
+                </Link>
+              </Box>
+            );
+          })}
         </Box>
       </Container>
     </Box>
@@ -569,6 +647,7 @@ const HomePage = () => {
     <Box sx={{ bgcolor: C.white, color: C.ink, fontFamily: sysFont }}>
       <GlobalStyles />
       <HeroSection images={galleryImages} />
+      <LatestUpdatesSection />
       <AboutSection />
       <ResearchSection />
       <DirectorSection />
