@@ -53,12 +53,19 @@
   const app = express();
   app.set('trust proxy', 1); // Trust Nginx reverse proxy (for rate-limiter + correct client IP)
 
-  app.use(helmet({ 
+  app.use(helmet({
     crossOriginResourcePolicy: false,
     crossOriginOpenerPolicy: false,
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: false,
   }));
+  // Strip headers that Helmet 6.x may still set despite config
+  app.use((req, res, next) => {
+    res.removeHeader('Cross-Origin-Embedder-Policy');
+    res.removeHeader('Content-Security-Policy');
+    res.removeHeader('Cross-Origin-Opener-Policy');
+    next();
+  });
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
   app.use(cookieParser());
