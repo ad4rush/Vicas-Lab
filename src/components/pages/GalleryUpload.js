@@ -7,9 +7,6 @@ import {
   CloudUpload as UploadIcon,
   CheckCircle as SuccessIcon, Delete as DeleteIcon
 } from '@mui/icons-material';
-import { v4 as uuidv4 } from 'uuid';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import main_4 from '../../Photos/main_4.jpeg';
 
@@ -140,12 +137,29 @@ function GalleryUpload() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  const uploadFileToFirebase = async (fileToUpload) => {
+  const uploadFileToS3 = async (fileToUpload) => {
     if (!fileToUpload) return null;
-    const uniqueName = `${uuidv4()}_${fileToUpload.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const storageRef = ref(storage, `gallery_images/${uniqueName}`);
-    const uploadTask = await uploadBytesResumable(storageRef, fileToUpload);
-    return getDownloadURL(uploadTask.ref);
+    
+    // 1. Get Presigned URL
+    const res = await fetch(`${API_BASE}/api/upload/presign`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileName: fileToUpload.name, fileType: fileToUpload.type, folder: 'gallery_images' })
+    });
+    
+    if (!res.ok) throw new Error('Failed to get secure upload link');
+    const { presignedUrl, publicUrl } = await res.json();
+
+    // 2. Upload directly to AWS S3
+    const uploadRes = await fetch(presignedUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': fileToUpload.type },
+      body: fileToUpload
+    });
+
+    if (!uploadRes.ok) throw new Error('Failed to upload photo directly to storage');
+
+    return publicUrl;
   };
 
   async function handleSubmit(e) {
@@ -155,7 +169,7 @@ function GalleryUpload() {
     setLoading(true); setError(null); setSuccess(null);
 
     try {
-      const imageUrl = await uploadFileToFirebase(file);
+      const imageUrl = await uploadFileToS3(file);
       
       const res = await fetch(`${API_BASE}/api/gallery/upload`, {
         method: 'POST',

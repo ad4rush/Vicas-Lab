@@ -9,9 +9,6 @@ import {
   Link as LinkIcon,
   Image as ImageIcon,
 } from '@mui/icons-material';
-import { v4 as uuidv4 } from 'uuid';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../firebase';
 import main_2 from '../../Photos/main_2.jpeg';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000';
@@ -68,12 +65,30 @@ function ContentUpload() {
     setMetadata(prev => ({ ...prev, [key]: value }));
   };
 
-  const uploadFileToFirebase = async (file, folder) => {
+  const uploadFileToS3 = async (file, folder) => {
     if (!file) return null;
-    const uniqueName = `${uuidv4()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const storageRef = ref(storage, `${folder}/${uniqueName}`);
-    const uploadTask = await uploadBytesResumable(storageRef, file);
-    return getDownloadURL(uploadTask.ref);
+    const token = localStorage.getItem('accessToken');
+    
+    // 1. Get Presigned URL
+    const res = await fetch(`${API_BASE}/api/upload/presign`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileName: file.name, fileType: file.type, folder })
+    });
+    
+    if (!res.ok) throw new Error('Failed to get secure upload link');
+    const { presignedUrl, publicUrl } = await res.json();
+
+    // 2. Upload directly to AWS S3
+    const uploadRes = await fetch(presignedUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type },
+      body: file
+    });
+
+    if (!uploadRes.ok) throw new Error('Failed to upload file directly to storage');
+
+    return publicUrl;
   };
 
   const resetForm = () => {
@@ -90,10 +105,10 @@ function ContentUpload() {
       let pdfUrl = null;
 
       if (imageFile) {
-        imageUrl = await uploadFileToFirebase(imageFile, 'content_images');
+        imageUrl = await uploadFileToS3(imageFile, 'content_images');
       }
       if (pdfFile) {
-        pdfUrl = await uploadFileToFirebase(pdfFile, 'content_pdfs');
+        pdfUrl = await uploadFileToS3(pdfFile, 'content_pdfs');
       }
 
       const enrichedMetadata = {

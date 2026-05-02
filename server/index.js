@@ -11,6 +11,7 @@
   const galleryRoutes = require('./routes/gallery');
   const contentRoutes = require('./routes/content');
   const btpRoutes = require('./routes/btp');
+  const uploadRoutes = require('./routes/uploadRoutes');
   const { initDb } = require('./db');
   const { initCronJobs } = require('./cron');
   const admin = require('firebase-admin');
@@ -100,6 +101,7 @@
   app.use('/api/gallery', galleryRoutes);
   app.use('/api/content', contentRoutes);
   app.use('/api/btp', btpRoutes);
+  app.use('/api/upload', uploadRoutes);
 
   app.get('/', (req, res) => res.json({ ok: true }));
 
