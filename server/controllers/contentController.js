@@ -34,7 +34,7 @@ async function deleteLocalFile(storagePath) {
 // ─── Content Endpoints ─────────────────────────────────────────
 
 async function uploadContent(req, res) {
-  const { type, title, description, fileName, fileData, pdfName, pdfData, metadata } = req.body;
+  const { type, title, description, fileName, fileData, pdfName, pdfData, metadata, imageUrl: clientImageUrl, pdfUrl: clientPdfUrl } = req.body;
   const user = req.user;
 
   if (!type || !['project', 'news', 'achievement', 'research'].includes(type)) {
@@ -46,16 +46,17 @@ async function uploadContent(req, res) {
 
   const db = await getDb();
   try {
-    let publicUrl = null, storagePath = null;
-    let pdfUrl = null, pdfStoragePath = null;
+    let publicUrl = clientImageUrl || null, storagePath = null;
+    let pdfUrl = clientPdfUrl || null, pdfStoragePath = null;
 
-    if (fileData && fileName) {
+    // Fallback for legacy base64 uploads
+    if (!clientImageUrl && fileData && fileName) {
       const saved = await saveFileLocally(fileData, fileName, UPLOAD_DIR, 'image\\/\\w+');
       publicUrl = saved.publicUrl;
       storagePath = saved.storagePath;
     }
 
-    if (pdfData && pdfName) {
+    if (!clientPdfUrl && pdfData && pdfName) {
       const savedPdf = await saveFileLocally(pdfData, pdfName, PDF_DIR, 'application\\/pdf');
       pdfUrl = savedPdf.publicUrl;
       pdfStoragePath = savedPdf.storagePath;

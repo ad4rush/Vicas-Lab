@@ -9,6 +9,9 @@ import {
   Link as LinkIcon,
   Image as ImageIcon,
 } from '@mui/icons-material';
+import { v4 as uuidv4 } from 'uuid';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../firebase';
 import main_2 from '../../Photos/main_2.jpeg';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000';
@@ -65,12 +68,13 @@ function ContentUpload() {
     setMetadata(prev => ({ ...prev, [key]: value }));
   };
 
-  const toBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+  const uploadFileToFirebase = async (file, folder) => {
+    if (!file) return null;
+    const uniqueName = `${uuidv4()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const storageRef = ref(storage, `${folder}/${uniqueName}`);
+    const uploadTask = await uploadBytesResumable(storageRef, file);
+    return getDownloadURL(uploadTask.ref);
+  };
 
   const resetForm = () => {
     setTitle(''); setDescription(''); setImageFile(null);
@@ -82,16 +86,14 @@ function ContentUpload() {
     setStatus({ error: null, success: null, loading: true });
 
     try {
-      let fileData = null, fileName = null;
-      let pdfData = null, pdfName = null;
+      let imageUrl = null;
+      let pdfUrl = null;
 
       if (imageFile) {
-        fileData = await toBase64(imageFile);
-        fileName = imageFile.name;
+        imageUrl = await uploadFileToFirebase(imageFile, 'content_images');
       }
       if (pdfFile) {
-        pdfData = await toBase64(pdfFile);
-        pdfName = pdfFile.name;
+        pdfUrl = await uploadFileToFirebase(pdfFile, 'content_pdfs');
       }
 
       const enrichedMetadata = {
@@ -103,11 +105,11 @@ function ContentUpload() {
       
       let res;
       if (type === 'gallery') {
-        if (!fileData) throw new Error('An image file is required for Gallery Photo.');
+        if (!imageUrl) throw new Error('An image file is required for Gallery Photo.');
         res = await fetch(`${API_BASE}/api/gallery/upload`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName, fileData, title, description })
+          body: JSON.stringify({ imageUrl, title, description })
         });
       } else {
         res = await fetch(`${API_BASE}/api/content/upload`, {
@@ -115,8 +117,7 @@ function ContentUpload() {
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             type, title, description,
-            fileData, fileName,
-            pdfData, pdfName,
+            imageUrl, pdfUrl,
             metadata: enrichedMetadata
           })
         });

@@ -7,6 +7,9 @@ import {
   CloudUpload as UploadIcon,
   CheckCircle as SuccessIcon, Delete as DeleteIcon
 } from '@mui/icons-material';
+import { v4 as uuidv4 } from 'uuid';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import main_4 from '../../Photos/main_4.jpeg';
 
@@ -137,6 +140,14 @@ function GalleryUpload() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
+  const uploadFileToFirebase = async (fileToUpload) => {
+    if (!fileToUpload) return null;
+    const uniqueName = `${uuidv4()}_${fileToUpload.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const storageRef = ref(storage, `gallery_images/${uniqueName}`);
+    const uploadTask = await uploadBytesResumable(storageRef, fileToUpload);
+    return getDownloadURL(uploadTask.ref);
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!file) { setError('A file selection is required.'); return; }
@@ -144,32 +155,26 @@ function GalleryUpload() {
     setLoading(true); setError(null); setSuccess(null);
 
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        try {
-          const res = await fetch(`${API_BASE}/api/gallery/upload`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              fileName: file.name,
-              fileData: reader.result,
-              title: title || null,
-              description: description || null,
-            }),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Upload sequence interrupted.');
+      const imageUrl = await uploadFileToFirebase(file);
+      
+      const res = await fetch(`${API_BASE}/api/gallery/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          imageUrl,
+          title: title || null,
+          description: description || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload sequence interrupted.');
 
-          setSuccess('Archive successfully transmitted for review.');
-          setFile(null); setPreview(null); setTitle(''); setDescription('');
-          if (fileInputRef.current) fileInputRef.current.value = '';
-        } catch (err) { setError(err.message); }
-        finally { setLoading(false); }
-      };
-      reader.onerror = () => { setError('Failed to process image buffer.'); setLoading(false); };
-    } catch (err) { setError(err.message); setLoading(false); }
+      setSuccess('Archive successfully transmitted for review.');
+      setFile(null); setPreview(null); setTitle(''); setDescription('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   }
 
   return (

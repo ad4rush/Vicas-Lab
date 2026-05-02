@@ -34,16 +34,23 @@ async function deleteLocalFile(storagePath) {
 
 // Upload photo
 async function uploadPhoto(req, res) {
-  const { fileName, fileData, title, description } = req.body;
+  const { fileName, fileData, title, description, imageUrl: clientImageUrl } = req.body;
   const user = req.user;
 
-  if (!fileName || !fileData) {
-    return res.status(400).json({ error: 'Image file is required' });
+  if (!clientImageUrl && (!fileName || !fileData)) {
+    return res.status(400).json({ error: 'Image file or URL is required' });
   }
 
   const db = await getDb();
   try {
-    const { publicUrl, storagePath } = await saveImageLocally(fileData, fileName);
+    let publicUrl = clientImageUrl || null;
+    let storagePath = null;
+
+    if (!clientImageUrl && fileData && fileName) {
+      const saved = await saveImageLocally(fileData, fileName);
+      publicUrl = saved.publicUrl;
+      storagePath = saved.storagePath;
+    }
 
     const photoId = uuidv4();
     const isPrivileged = user.role === 'admin' || user.role === 'super_admin';
