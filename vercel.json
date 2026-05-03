@@ -3,6 +3,10 @@
     {
       "source": "/api/(.*)",
       "destination": "https://vicas-hub.duckdns.org/api/$1"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "https://vicas-hub.duckdns.org/uploads/$1"
     }
   ]
 }
