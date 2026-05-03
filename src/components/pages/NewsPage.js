@@ -38,7 +38,7 @@ const GlobalStyles = () => (
 );
 
 const NewsPage = () => {
-  const { isSuperAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const [newsItems, setNewsItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -167,7 +167,7 @@ const NewsPage = () => {
                   return (
                     <div key={item.id || index} className="vicas-news-item">
                       {/* Admin Actions */}
-                      {isSuperAdmin && (
+                      {isAdmin && (
                         <div className="admin-actions">
                           <IconButton size="small" onClick={() => openEdit(item)} sx={{ bgcolor: C.bg, border: `1px solid ${C.border}`, '&:hover': { bgcolor: '#E0F7FC', borderColor: C.sky } }}><EditIcon sx={{ fontSize: 16, color: C.navy }} /></IconButton>
                           <IconButton size="small" onClick={() => openDelete(item)} sx={{ bgcolor: C.dangerBg, border: '1px solid #FECACA', '&:hover': { bgcolor: '#FEE2E2', borderColor: C.danger } }}><DeleteIcon sx={{ fontSize: 16, color: C.danger }} /></IconButton>

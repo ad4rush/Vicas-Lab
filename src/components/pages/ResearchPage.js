@@ -2,9 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Container, Typography, Box, 
   Select, MenuItem, FormControl, InputLabel,
-  Modal, Backdrop, Fade, IconButton, Divider, CircularProgress
+  Modal, Backdrop, Fade, IconButton, Divider, CircularProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, Button
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Close as CloseIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
 import main_2 from '../../Photos/main_2.jpeg';
 
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000';
@@ -20,6 +22,8 @@ const C = {
   ink:      '#111827',
   ink2:     '#374151',
   ink3:     '#6B7280',
+  danger:   '#DC2626',
+  dangerBg: '#FEF2F2',
 };
 
 const sysFont = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif";
@@ -68,15 +72,18 @@ const GlobalStyles = () => (
       background: ${C.white};
       margin-bottom: 16px;
       display: grid;
-      grid-template-columns: 80px 1fr;
+      grid-template-columns: 80px 1fr auto;
       gap: 24px;
       transition: all 0.3s ease;
       cursor: pointer;
+      position: relative;
     }
     .vicas-pub-card:hover {
       border-color: ${C.sky};
       box-shadow: 0 4px 20px rgba(10, 37, 64, 0.05);
     }
+    .vicas-pub-card .delete-btn { opacity: 0; transition: opacity 0.2s; }
+    .vicas-pub-card:hover .delete-btn { opacity: 1; }
 
     .vicas-filter-form .MuiOutlinedInput-root {
       border-radius: 8px;
@@ -103,6 +110,7 @@ const GlobalStyles = () => (
 );
 
 const ResearchPage = () => {
+  const { isAdmin } = useAuth();
   const [year, setYear] = useState('');
   const [topic, setTopic] = useState('');
   const [author, setAuthor] = useState('');
@@ -113,37 +121,40 @@ const ResearchPage = () => {
   const [open, setOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  useEffect(() => {
-    const fetchResearch = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/content/research`);
-        const data = await res.json();
-        if (res.ok && data.items) {
-          const parsed = data.items.map(item => {
-            const meta = item.metadata ? JSON.parse(item.metadata) : {};
-            let pubYear = '';
-            if (meta.date) {
-              pubYear = new Date(meta.date).getFullYear().toString();
-            }
-            return {
-              ...item,
-              meta,
-              year: pubYear || 'N/A',
-              topic: meta.topic || 'General',
-              author: meta.author || 'Unknown',
-              journal: meta.journal || 'Unpublished'
-            };
-          });
-          setPublications(parsed);
-        }
-      } catch (err) {
-        console.error("Failed to fetch research", err);
-      } finally {
-        setLoading(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchResearch = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/content/research`);
+      const data = await res.json();
+      if (res.ok && data.items) {
+        const parsed = data.items.map(item => {
+          const meta = item.metadata ? JSON.parse(item.metadata) : {};
+          let pubYear = '';
+          if (meta.date) {
+            pubYear = new Date(meta.date).getFullYear().toString();
+          }
+          return {
+            ...item,
+            meta,
+            year: pubYear || 'N/A',
+            topic: meta.topic || 'General',
+            author: meta.author || 'Unknown',
+            journal: meta.journal || 'Unpublished'
+          };
+        });
+        setPublications(parsed);
       }
-    };
-    fetchResearch();
-  }, []);
+    } catch (err) {
+      console.error("Failed to fetch research", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchResearch(); }, []);
 
   const years = useMemo(() => [...new Set(publications.map(p => p.year).filter(y => y !== 'N/A'))].sort().reverse(), [publications]);
   const topics = useMemo(() => [...new Set(publications.map(p => p.topic))], [publications]);
@@ -163,6 +174,24 @@ const ResearchPage = () => {
   const handleClose = () => {
     setOpen(false);
     setSelectedItem(null);
+  };
+
+  // ─── Delete ──────────────────────────────────────────────────
+  const openDelete = (item, e) => {
+    if (e) e.stopPropagation();
+    setDeleteTarget(item);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const token = localStorage.getItem('accessToken');
+    try {
+      const res = await fetch(`${API_BASE}/api/content/${deleteTarget.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { setDeleteDialogOpen(false); setOpen(false); setSelectedItem(null); await fetchResearch(); }
+    } catch (err) { console.error('Delete failed:', err); }
+    finally { setDeleting(false); }
   };
 
   return (
@@ -265,6 +294,13 @@ const ResearchPage = () => {
                     </Box>
                   </Box>
                 </Box>
+                {isAdmin && (
+                  <Box className="delete-btn" sx={{ display: 'flex', alignItems: 'center' }}>
+                    <IconButton size="small" onClick={(e) => openDelete(pub, e)} sx={{ bgcolor: C.dangerBg, border: '1px solid #FECACA', '&:hover': { bgcolor: '#FEE2E2', borderColor: C.danger } }}>
+                      <DeleteIcon sx={{ fontSize: 16, color: C.danger }} />
+                    </IconButton>
+                  </Box>
+                )}
               </Box>
             ))}
           </Box>
@@ -295,9 +331,14 @@ const ResearchPage = () => {
             {selectedItem && (
               <div style={{ position: 'relative' }}>
                 <div style={{ height: '6px', background: C.navy }} />
-                <IconButton onClick={handleClose} sx={{ position: 'absolute', top: 20, right: 20, color: C.ink3 }}>
-                  <CloseIcon />
-                </IconButton>
+                <Box sx={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 1 }}>
+                  {isAdmin && (
+                    <IconButton size="small" onClick={(e) => openDelete(selectedItem, e)} sx={{ bgcolor: C.dangerBg, border: '1px solid #FECACA', '&:hover': { bgcolor: '#FEE2E2' } }}>
+                      <DeleteIcon sx={{ fontSize: 18, color: C.danger }} />
+                    </IconButton>
+                  )}
+                  <IconButton onClick={handleClose} sx={{ color: C.ink3 }}><CloseIcon /></IconButton>
+                </Box>
 
                 <div style={{ padding: '56px 48px' }}>
                   <SectionLabel>{selectedItem.topic}</SectionLabel>
@@ -350,6 +391,18 @@ const ResearchPage = () => {
           </Box>
         </Fade>
       </Modal>
+
+      {/* Delete Confirmation */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ sx: { borderRadius: '12px' } }}>
+        <DialogTitle sx={{ fontWeight: 800, color: C.danger, fontFamily: sysFont }}>Delete Publication</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ color: C.ink2 }}>Are you sure you want to permanently delete <strong>"{deleteTarget?.title}"</strong>? This action cannot be undone.</Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: C.ink3 }}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} disabled={deleting} variant="contained" color="error" startIcon={<DeleteIcon />} sx={{ borderRadius: '8px', fontWeight: 700 }}>{deleting ? 'Deleting...' : 'Delete'}</Button>
+        </DialogActions>
+      </Dialog>
 
     </div>
   );

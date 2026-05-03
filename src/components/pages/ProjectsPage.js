@@ -44,7 +44,7 @@ const GlobalStyles = () => (
 );
 
 const ProjectsPage = () => {
-  const { isSuperAdmin } = useAuth();
+  const { isAdmin } = useAuth();
   const [open, setOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -135,7 +135,7 @@ const ProjectsPage = () => {
               const meta = project.metadata ? JSON.parse(project.metadata) : {};
               return (
                 <div key={project.id || index} className="vicas-project-card">
-                  {isSuperAdmin && (
+                  {isAdmin && (
                     <div className="admin-actions">
                       <IconButton size="small" onClick={(e) => openEdit(project, e)} sx={{ bgcolor: C.bg, border: `1px solid ${C.border}`, '&:hover': { bgcolor: '#E0F7FC', borderColor: C.sky } }}><EditIcon sx={{ fontSize: 16, color: C.navy }} /></IconButton>
                       <IconButton size="small" onClick={(e) => openDelete(project, e)} sx={{ bgcolor: C.dangerBg, border: '1px solid #FECACA', '&:hover': { bgcolor: '#FEE2E2', borderColor: C.danger } }}><DeleteIcon sx={{ fontSize: 16, color: C.danger }} /></IconButton>
@@ -164,7 +164,7 @@ const ProjectsPage = () => {
               <div style={{ position: 'relative' }}>
                 <div style={{ height: '6px', background: C.navy }} />
                 <Box sx={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 1 }}>
-                  {isSuperAdmin && (
+                  {isAdmin && (
                     <>
                       <IconButton size="small" onClick={(e) => openEdit(selectedProject, e)} sx={{ bgcolor: C.bg, border: `1px solid ${C.border}`, '&:hover': { bgcolor: '#E0F7FC' } }}><EditIcon sx={{ fontSize: 18, color: C.navy }} /></IconButton>
                       <IconButton size="small" onClick={(e) => openDelete(selectedProject, e)} sx={{ bgcolor: C.dangerBg, border: '1px solid #FECACA', '&:hover': { bgcolor: '#FEE2E2' } }}><DeleteIcon sx={{ fontSize: 18, color: C.danger }} /></IconButton>
