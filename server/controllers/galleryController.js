@@ -34,10 +34,14 @@ async function deleteLocalFile(storagePath) {
 
 // Upload photo
 async function uploadPhoto(req, res) {
-  const { fileName, fileData, title, description, imageUrl: clientImageUrl } = req.body;
+  const { fileName, fileData, imageData, title, description, imageUrl: clientImageUrl } = req.body;
   const user = req.user;
 
-  if (!clientImageUrl && (!fileName || !fileData)) {
+  // Accept both fileData and imageData (frontend sends imageData as fallback)
+  const base64Data = fileData || imageData;
+  const imgFileName = fileName || 'upload.jpg';
+
+  if (!clientImageUrl && !base64Data) {
     return res.status(400).json({ error: 'Image file or URL is required' });
   }
 
@@ -46,8 +50,8 @@ async function uploadPhoto(req, res) {
     let publicUrl = clientImageUrl || null;
     let storagePath = null;
 
-    if (!clientImageUrl && fileData && fileName) {
-      const saved = await saveImageLocally(fileData, fileName);
+    if (!clientImageUrl && base64Data) {
+      const saved = await saveImageLocally(base64Data, imgFileName);
       publicUrl = saved.publicUrl;
       storagePath = saved.storagePath;
     }

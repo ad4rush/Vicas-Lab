@@ -1,6 +1,6 @@
 const express = require('express');
 const { generatePresignedUrl } = require('../controllers/uploadController');
-const { authenticateToken } = require('../middleware/authMiddleware');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 

@@ -65,30 +65,41 @@ function ContentUpload() {
     setMetadata(prev => ({ ...prev, [key]: value }));
   };
 
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const uploadFileToS3 = async (file, folder) => {
     if (!file) return null;
     const token = localStorage.getItem('accessToken');
     
-    // 1. Get Presigned URL
-    const res = await fetch(`${API_BASE}/api/upload/presign`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileName: file.name, fileType: file.type, folder })
-    });
-    
-    if (!res.ok) throw new Error('Failed to get secure upload link');
-    const { presignedUrl, publicUrl } = await res.json();
+    try {
+      // Try S3 presigned upload first
+      const res = await fetch(`${API_BASE}/api/upload/presign`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name, fileType: file.type, folder })
+      });
+      
+      if (!res.ok) return null; // S3 not configured — will fallback to base64
+      const { presignedUrl, publicUrl } = await res.json();
 
-    // 2. Upload directly to AWS S3
-    const uploadRes = await fetch(presignedUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': file.type },
-      body: file
-    });
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+      });
 
-    if (!uploadRes.ok) throw new Error('Failed to upload file directly to storage');
-
-    return publicUrl;
+      if (!uploadRes.ok) return null; // Upload failed — will fallback
+      return publicUrl;
+    } catch {
+      return null; // S3 not available — will fallback to base64
+    }
   };
 
   const resetForm = () => {
@@ -103,12 +114,24 @@ function ContentUpload() {
     try {
       let imageUrl = null;
       let pdfUrl = null;
+      let fileData = null, fileName = null;
+      let pdfData = null, pdfName = null;
 
+      // Try S3 upload first, fallback to base64
       if (imageFile) {
         imageUrl = await uploadFileToS3(imageFile, 'content_images');
+        if (!imageUrl) {
+          // Fallback: convert to base64 for server-side local storage
+          fileData = await fileToBase64(imageFile);
+          fileName = imageFile.name;
+        }
       }
       if (pdfFile) {
         pdfUrl = await uploadFileToS3(pdfFile, 'content_pdfs');
+        if (!pdfUrl) {
+          pdfData = await fileToBase64(pdfFile);
+          pdfName = pdfFile.name;
+        }
       }
 
       const enrichedMetadata = {
@@ -120,11 +143,15 @@ function ContentUpload() {
       
       let res;
       if (type === 'gallery') {
-        if (!imageUrl) throw new Error('An image file is required for Gallery Photo.');
+        if (!imageUrl && !fileData) throw new Error('An image file is required for Gallery Photo.');
+        // Gallery upload — use base64 if no S3 URL
+        const body = imageUrl
+          ? { imageUrl, title, description }
+          : { imageData: fileData, fileName: fileName, title, description };
         res = await fetch(`${API_BASE}/api/gallery/upload`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageUrl, title, description })
+          body: JSON.stringify(body)
         });
       } else {
         res = await fetch(`${API_BASE}/api/content/upload`, {
@@ -133,6 +160,8 @@ function ContentUpload() {
           body: JSON.stringify({
             type, title, description,
             imageUrl, pdfUrl,
+            fileData, fileName,
+            pdfData, pdfName,
             metadata: enrichedMetadata
           })
         });

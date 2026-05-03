@@ -140,26 +140,28 @@ function GalleryUpload() {
   const uploadFileToS3 = async (fileToUpload) => {
     if (!fileToUpload) return null;
     
-    // 1. Get Presigned URL
-    const res = await fetch(`${API_BASE}/api/upload/presign`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileName: fileToUpload.name, fileType: fileToUpload.type, folder: 'gallery_images' })
-    });
-    
-    if (!res.ok) throw new Error('Failed to get secure upload link');
-    const { presignedUrl, publicUrl } = await res.json();
+    try {
+      // Try S3 presigned upload first
+      const res = await fetch(`${API_BASE}/api/upload/presign`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: fileToUpload.name, fileType: fileToUpload.type, folder: 'gallery_images' })
+      });
+      
+      if (!res.ok) return null; // S3 not configured — fallback to base64
+      const { presignedUrl, publicUrl } = await res.json();
 
-    // 2. Upload directly to AWS S3
-    const uploadRes = await fetch(presignedUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': fileToUpload.type },
-      body: fileToUpload
-    });
+      const uploadRes = await fetch(presignedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': fileToUpload.type },
+        body: fileToUpload
+      });
 
-    if (!uploadRes.ok) throw new Error('Failed to upload photo directly to storage');
-
-    return publicUrl;
+      if (!uploadRes.ok) return null;
+      return publicUrl;
+    } catch {
+      return null; // S3 not available — fallback to base64
+    }
   };
 
   async function handleSubmit(e) {
@@ -169,17 +171,23 @@ function GalleryUpload() {
     setLoading(true); setError(null); setSuccess(null);
 
     try {
+      // Try S3 first
       const imageUrl = await uploadFileToS3(file);
       
+      let body;
+      if (imageUrl) {
+        // S3 succeeded — send the public URL
+        body = { imageUrl, title: title || null, description: description || null };
+      } else {
+        // S3 failed — fallback to base64 (preview already has the DataURL)
+        body = { imageData: preview, fileName: file.name, title: title || null, description: description || null };
+      }
+
       const res = await fetch(`${API_BASE}/api/gallery/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          imageUrl,
-          title: title || null,
-          description: description || null,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload sequence interrupted.');
