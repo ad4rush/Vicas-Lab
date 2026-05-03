@@ -11,7 +11,7 @@ import {
   Send as SendIcon,
   NoteAdd as SubmitIcon
 } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import LoginDialog from './LoginDialog';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -117,8 +117,9 @@ const HeaderStyles = () => (
 
 /* ─── HEADER COMPONENT ──────────────────────────────────────────── */
 const Header = () => {
-  const { user, isAuthenticated, isAdmin, login, logout, role } = useAuth();
+  const { user, isAuthenticated, isAdmin, login, logout, role, isSuperAdmin } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -369,7 +370,18 @@ const Header = () => {
           </Box>
         </Toolbar>
 
-        <LoginDialog open={loginOpen} onClose={() => setLoginOpen(false)} onSuccess={(me) => login(me)} />
+        <LoginDialog 
+          open={loginOpen} 
+          onClose={() => setLoginOpen(false)} 
+          onSuccess={(me) => {
+            login(me);
+            const redirectUrl = localStorage.getItem('redirectAfterLogin');
+            if (redirectUrl) {
+              localStorage.removeItem('redirectAfterLogin');
+              navigate(redirectUrl);
+            }
+          }} 
+        />
       </AppBar>
 
       {/* ─── Full-Screen Mobile Overlay ──────────────────────────── */}

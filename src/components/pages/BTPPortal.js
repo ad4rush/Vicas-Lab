@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Container, Typography, Box, Paper, Button, TextField, Grid,
   List, ListItem, ListItemText, ListItemIcon, Divider, Chip,
@@ -45,6 +46,7 @@ const SectionLabel = ({ children }) => (
 
 export default function BTPPortal() {
   const { user } = useAuth();
+  const location = useLocation();
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projectData, setProjectData] = useState({ reports: [], members: [] });
@@ -123,6 +125,14 @@ export default function BTPPortal() {
       const data = await res.json();
       if (res.ok) {
         setProjects(data.projects || []);
+        
+        // Auto-select from URL if present
+        const searchParams = new URLSearchParams(location.search);
+        const projectId = searchParams.get('project');
+        if (projectId && data.projects) {
+          const found = data.projects.find(p => p.id === parseInt(projectId));
+          if (found) setSelectedProject(found);
+        }
       }
     } catch (err) {
       console.error(err);

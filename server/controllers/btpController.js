@@ -107,13 +107,13 @@ async function addMember(req, res) {
       await db.run('INSERT INTO btp_invites (token, project_id, email, inviter_id) VALUES (?, ?, ?, ?)', token, id, email, req.user.sub);
       
       const inviter = await db.get('SELECT name FROM users WHERE id = ?', req.user.sub);
-      const inviteUrl = `${process.env.FRONTEND_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:3000'}/invite/${token}`;
+      const inviteUrl = `${process.env.FRONTEND_ORIGIN || 'https://vicas-lab.vercel.app'}/invite/${token}`;
       
       const mailOptions = {
         from: process.env.SMTP_FROM || '"VICAS Lab" <noreply@vicaslab.com>',
         to: email,
         subject: `Invitation to join BTP Project: "${project.title}"`,
-        text: `Hello,\n\n${inviter.name} is sending you a request to join the BTP project "${project.title}".\n\nPlease join by clicking this link:\n${inviteUrl}\n\nBest,\nVICAS Lab`
+        text: `Hello,\n\n${inviter.name} is sending you a request to join the BTP project "${project.title}".\n\nIMPORTANT: Please make sure you are logged into the VICAS Hub first before clicking this link. If you click it while logged out, you will be redirected to the home page.\n\nPlease join by clicking this link:\n${inviteUrl}\n\nBest,\nVICAS Lab`
       };
       
       try {

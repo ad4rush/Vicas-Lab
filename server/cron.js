@@ -31,7 +31,7 @@ function initCronJobs() {
             from: process.env.SMTP_FROM || '"VICAS Lab" <noreply@vicaslab.com>',
             to: member.email,
             subject: `Reminder: Submit Week ${weekNumber} BTP Report for "${project.title}"`,
-            text: `Hi ${member.name},\n\nThis is an automated reminder to submit your Week ${weekNumber} BTP report for your project: "${project.title}".\n\nPlease log in to the VICAS Hub and submit your report via the BTP Portal: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/btp\n\nBest,\nVICAS Lab`
+            text: `Hi ${member.name},\n\nThis is an automated reminder to submit your Week ${weekNumber} BTP report for your project: "${project.title}".\n\nPlease log in to the VICAS Hub and submit your report via the BTP Portal: ${process.env.FRONTEND_ORIGIN || 'https://vicas-lab.vercel.app'}/btp?project=${project.id}\n\nBest,\nVICAS Lab`
           };
 
           try {
